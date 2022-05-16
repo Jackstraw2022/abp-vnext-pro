@@ -27,7 +27,7 @@
           const token = currentRoute.value.fullPath.split('=')[2].split('&')[0];
 
           if (token) {
-            await userStore.stsLogin(token, id_token);
+            await userStore.id4Login(token, id_token);
           }
         } catch {
           message.error('登陆失败');
