@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using Shouldly;
-using Volo.Abp;
-using Xunit;
-
 namespace Lion.AbpPro.IdentityServer
 {
     public class IdenityServerApiResourceManager_Tests : AbpProDomainTestBase
@@ -61,11 +53,11 @@ namespace Lion.AbpPro.IdentityServer
         [Fact]
         public async Task Shuold_CreateAsync_Name_Repetition_Exception()
         {
-            (await Should.ThrowAsync<UserFriendlyException>(async () =>
+            (await Should.ThrowAsync<BusinessException>(async () =>
             {
                 var result = await _idenityServerApiResourceManager.CreateAsync(Guid.NewGuid(),
                     "ApiResource_Test", "单元测试创建", "Xunit", true, "", false, "1q2w3E*");
-            })).Message.ShouldBe("ApiResource已存在");
+            })).Code.ShouldBe(AbpProDomainErrorCodes.ApiResourceExist);
         }
 
 

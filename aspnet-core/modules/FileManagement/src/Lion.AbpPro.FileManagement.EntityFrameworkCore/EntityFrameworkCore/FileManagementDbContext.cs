@@ -1,9 +1,4 @@
-﻿using Lion.AbpPro.FileManagement.Files;
-using Microsoft.EntityFrameworkCore;
-using Volo.Abp.Data;
-using Volo.Abp.EntityFrameworkCore;
-
-namespace Lion.AbpPro.FileManagement.EntityFrameworkCore;
+﻿namespace Lion.AbpPro.FileManagement.EntityFrameworkCore;
 
 [ConnectionStringName(FileManagementDbProperties.ConnectionStringName)]
 public class FileManagementDbContext : AbpDbContext<FileManagementDbContext>, IFileManagementDbContext
@@ -24,5 +19,5 @@ public class FileManagementDbContext : AbpDbContext<FileManagementDbContext>, IF
         builder.ConfigureFileManagement();
     }
 
-    public DbSet<File> Files { get;  }
+    public DbSet<Lion.AbpPro.FileManagement.Files.File> Files { get;  }
 }

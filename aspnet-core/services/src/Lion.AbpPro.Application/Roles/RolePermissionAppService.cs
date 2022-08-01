@@ -1,11 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Lion.AbpPro.Roles.Dtos;
-using Microsoft.AspNetCore.Authorization;
-using Volo.Abp.Identity;
-using Volo.Abp.PermissionManagement;
-
 namespace Lion.AbpPro.Roles
 {
     [Authorize]
@@ -65,11 +57,10 @@ namespace Lion.AbpPro.Roles
             };
 
             var permissions = new List<PermissionTreeDto>();
-
             foreach (var group in input)
             {
                 if (excludes.Any(e => e == group.Name)) continue;
-
+                
                 // 获取分组信息
                 var groupPermission = new PermissionTreeDto
                 {
@@ -93,7 +84,6 @@ namespace Lion.AbpPro.Roles
                 var childTreeMenu = RecursionMenu(group.Permissions, null);
 
                 groupPermission.Children.AddRange(childTreeMenu.Children);
-                
                 permissions.Add(groupPermission);
             }
 

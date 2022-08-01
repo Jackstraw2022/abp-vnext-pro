@@ -1,25 +1,3 @@
-using System;
-using System.Linq;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
-using Lion.AbpPro.FileManagement.EntityFrameworkCore;
-using StackExchange.Redis;
-using Swashbuckle.AspNetCore.SwaggerUI;
-using Volo.Abp;
-using Volo.Abp.AspNetCore.Mvc.AntiForgery;
-using Volo.Abp.AspNetCore.Serilog;
-using Volo.Abp.Autofac;
-using Volo.Abp.Caching;
-using Volo.Abp.Caching.StackExchangeRedis;
-using Volo.Abp.Localization;
-using Volo.Abp.Modularity;
-using Volo.Abp.Swashbuckle;
-using Volo.Abp.VirtualFileSystem;
-
 namespace Lion.AbpPro.FileManagement;
 
 [DependsOn(
@@ -29,7 +7,8 @@ namespace Lion.AbpPro.FileManagement;
     typeof(AbpAutofacModule),
     typeof(AbpCachingStackExchangeRedisModule),
     typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpSwashbuckleModule)
+    typeof(AbpSwashbuckleModule),
+    typeof(AbpEntityFrameworkCoreMySQLModule)
 )]
 public class FileManagementHttpApiHostModule : AbpModule
 {
@@ -43,6 +22,7 @@ public class FileManagementHttpApiHostModule : AbpModule
         ConfigureLocalization();
         ConfigureCache(context);
         ConfigureCors(context);
+        ConfigDB();
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -121,6 +101,16 @@ public class FileManagementHttpApiHostModule : AbpModule
     {
         Configure<AbpAntiForgeryOptions>(options => { options.AutoValidate = false; });
     }
+    private void ConfigDB()
+    {
+        Configure<AbpDbContextOptions>(options =>
+        {
+            /* The main point to change your DBMS.
+             * See also OperationsMigrationsDbContextFactory for EF Core tooling. */
+            options.UseMySQL();
+        });
+    }
+    
 
     /// <summary>
     ///     配置本地化

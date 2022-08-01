@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Shouldly;
-using Volo.Abp;
-using Xunit;
-
 namespace Lion.AbpPro.IdentityServer
 {
     public class IdenityServerApiScopeManager_Tests : AbpProDomainTestBase
@@ -59,11 +51,11 @@ namespace Lion.AbpPro.IdentityServer
         [Fact]
         public async Task Shuold_CreateAsync_Name_Repetition_Exception()
         {
-            (await Should.ThrowAsync<UserFriendlyException>(async () =>
+            (await Should.ThrowAsync<BusinessException>(async () =>
             {
                 var result = await _idenityServerApiScopeManager.CreateAsync(
                     "ApiScope_Test", "单元测试创建", "Xunit", true, false, false, true);
-            })).Message.ShouldBe("ApiScope_Test已存在");
+            })).Code.ShouldBe(AbpProDomainErrorCodes.ApiScopeExist);
         }
         
         // [Fact]

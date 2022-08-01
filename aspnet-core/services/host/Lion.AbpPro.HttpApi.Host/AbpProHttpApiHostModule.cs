@@ -1,49 +1,3 @@
-using Lion.AbpPro.ConfigurationOptions;
-using Lion.AbpPro.EntityFrameworkCore;
-using Lion.AbpPro.MultiTenancy;
-using Hangfire;
-using Hangfire.MySql;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Savorboard.CAP.InMemoryMessageQueue;
-using StackExchange.Redis;
-using Swashbuckle.AspNetCore.SwaggerUI;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Lion.AbpPro.CAP;
-using Lion.AbpPro.Extensions;
-using Lion.AbpPro.Extensions.Hangfire;
-using Lion.AbpPro.Shared.Hosting.Microservices;
-using Lion.AbpPro.Shared.Hosting.Microservices.Microsoft.AspNetCore.Builder;
-using Lion.AbpPro.Shared.Hosting.Microservices.Microsoft.AspNetCore.MVC.Filters;
-using Lion.AbpPro.Shared.Hosting.Microservices.Swaggers;
-using Volo.Abp;
-using Volo.Abp.Account.Web;
-using Volo.Abp.AspNetCore.Authentication.JwtBearer;
-using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
-using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic;
-using Volo.Abp.AspNetCore.Serilog;
-using Volo.Abp.BackgroundJobs;
-using Volo.Abp.BackgroundJobs.Hangfire;
-using Volo.Abp.Caching;
-using Volo.Abp.Caching.StackExchangeRedis;
-using Volo.Abp.Modularity;
-using Microsoft.AspNetCore.Mvc;
-using Magicodes.ExporterAndImporter.Core;
-using Magicodes.ExporterAndImporter.Excel;
-using Microsoft.AspNetCore.Identity;
-using Volo.Abp.AspNetCore.ExceptionHandling;
-
 namespace Lion.AbpPro
 {
     [DependsOn(
@@ -54,7 +8,6 @@ namespace Lion.AbpPro
         typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
         typeof(AbpAspNetCoreSerilogModule),
         typeof(AbpAccountWebModule),
-        typeof(AbpBackgroundJobsHangfireModule),
         typeof(AbpProApplicationModule),
         typeof(AbpProAbpCapModule),
         typeof(AbpAspNetCoreMvcUiBasicThemeModule),
@@ -65,6 +18,7 @@ namespace Lion.AbpPro
         public override void OnPostApplicationInitialization(
             ApplicationInitializationContext context)
         {
+            // 应用程序初始化的时候注册hangfire
             context.CreateRecurringJob();
             base.OnPostApplicationInitialization(context);
         }
@@ -83,13 +37,15 @@ namespace Lion.AbpPro
             ConfigureMagicodes(context);
             ConfigureAbpExceptions(context);
             ConfigureIdentity(context);
+            ConfigureCap(context);
+            ConfigureAuditLog(context);
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
         {
             var app = context.GetApplicationBuilder();
             var configuration = context.GetConfiguration();
-            app.UseRequestLog();
+            //app.UseRequestLog();
             app.UseAbpRequestLocalization();
             app.UseCorrelationId();
             app.UseStaticFiles();
@@ -135,9 +91,6 @@ namespace Lion.AbpPro
         /// <param name="context"></param>
         private void ConfigureAbpExceptions(ServiceConfigurationContext context)
         {
-            //开启后通过ErrorCode抛本地化异常，message不会显示本地化词条
-            var SendExceptionsDetails = context.Services.GetHostingEnvironment().IsDevelopment();
-            context.Services.Configure<AbpExceptionHandlingOptions>(options => { options.SendExceptionsDetailsToClients = SendExceptionsDetails; });
             context.Services.AddMvc(options => { options.Filters.Add(typeof(ResultExceptionFilter)); });
         }
 
@@ -154,6 +107,7 @@ namespace Lion.AbpPro
         private void ConfigureHangfireMysql(ServiceConfigurationContext context)
         {
             Configure<AbpBackgroundJobOptions>(options => { options.IsJobExecutionEnabled = true; });
+            context.Services.AddHangfireServer();
             context.Services.AddHangfire(config =>
             {
                 config.UseStorage(new MySqlStorage(
@@ -182,8 +136,7 @@ namespace Lion.AbpPro
         /// <param name="context"></param>
         private void ConfigureMiniProfiler(ServiceConfigurationContext context)
         {
-            context.Services.AddMiniProfiler(options => options.RouteBasePath = "/profiler")
-                .AddEntityFramework();
+            context.Services.AddMiniProfiler(options => options.RouteBasePath = "/profiler").AddEntityFramework();
         }
 
         /// <summary>
@@ -227,34 +180,29 @@ namespace Lion.AbpPro
                                 return Task.CompletedTask;
                             }
 
-                            var accessToken =
-                                currentContext.Request.Query["access_token"].FirstOrDefault() ??
-                                currentContext.Request.Cookies[
-                                    AbpProHttpApiHostConst.DefaultCookieName];
+                            var accessToken = string.Empty;
+                            if (currentContext.HttpContext.Request.Headers.ContainsKey("Authorization"))
+                            {
+                                accessToken = currentContext.HttpContext.Request.Headers["Authorization"];
+                                if (!string.IsNullOrWhiteSpace(accessToken))
+                                {
+                                    accessToken = accessToken.Split(" ").LastOrDefault();
+                                }
+                            }
 
                             if (accessToken.IsNullOrWhiteSpace())
                             {
-                                return Task.CompletedTask;
+                                accessToken = currentContext.Request.Query["access_token"].FirstOrDefault();
                             }
 
-                            if (path.StartsWithSegments("/signalr"))
+                            if (accessToken.IsNullOrWhiteSpace())
                             {
-                                currentContext.Token = accessToken;
+                                accessToken = currentContext.Request.Cookies[AbpProHttpApiHostConst.DefaultCookieName];
                             }
 
+                            currentContext.Token = accessToken;
                             currentContext.Request.Headers.Remove("Authorization");
-                            currentContext.Request.Headers.Add("Authorization",
-                                $"Bearer {accessToken}");
-
-                            // 如果请求来自hangfire 或者cap
-                            if (path.ToString().StartsWith("/hangfire") ||
-                                path.ToString().StartsWith("/cap"))
-                            {
-                                // currentContext.HttpContext.Response.Headers.Remove(
-                                //     "X-Frame-Options");
-                                currentContext.Token = accessToken;
-                            }
-
+                            currentContext.Request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
                             return Task.CompletedTask;
                         }
@@ -320,14 +268,6 @@ namespace Lion.AbpPro
         {
             context.Services.Configure<IdentityOptions>(options => { options.Lockout = new LockoutOptions() { AllowedForNewUsers = false }; });
         }
-
-        // private void ConfigureConventionalControllers()
-        // {
-        //     Configure<AbpAspNetCoreMvcOptions>(options =>
-        //     {
-        //         options.ConventionalControllers.Create(typeof(AbpProApplicationModule).Assembly);
-        //     });
-        // }
 
         private static void ConfigureSwaggerServices(ServiceConfigurationContext context)
         {
@@ -429,6 +369,30 @@ namespace Lion.AbpPro
                     capOptions.UseDashboard(options => { options.UseAuth = auth; });
                 });
             }
+        }
+        
+        /// <summary>
+        /// 审计日志
+        /// </summary>
+        private void ConfigureAuditLog(ServiceConfigurationContext context)
+        {
+            Configure<AbpAuditingOptions>
+            (
+                options =>
+                {
+                    options.IsEnabled = true;
+                    options.EntityHistorySelectors.AddAllEntities();
+                    options.ApplicationName = "Lion.AbpPro";
+                }
+            );
+
+            Configure<AbpAspNetCoreAuditingOptions>(
+                options =>
+                {
+                    options.IgnoredUrls.Add("/AuditLogs/page");
+                    options.IgnoredUrls.Add("/hangfire/stats");
+                    options.IgnoredUrls.Add("/cap");
+                });
         }
     }
 }

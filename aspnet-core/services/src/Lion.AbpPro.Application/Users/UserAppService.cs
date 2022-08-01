@@ -1,22 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Lion.AbpPro.Users.Dtos;
-using Lion.AbpPro.Extension.Customs.Dtos;
-using Lion.AbpPro.Permissions;
-using Magicodes.ExporterAndImporter.Excel;
-using Magicodes.ExporterAndImporter.Excel.AspNetCore;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Volo.Abp;
-using Volo.Abp.Account;
-using Volo.Abp.Application.Dtos;
-using Volo.Abp.Identity;
-using Volo.Abp.Users;
-
 namespace Lion.AbpPro.Users
 {
     [Authorize(Policy = IdentityPermissions.Users.Default)]
@@ -27,7 +8,6 @@ namespace Lion.AbpPro.Users
         private readonly IIdentityUserRepository _identityUserRepository;
         private readonly IExcelExporter _excelExporter;
         private readonly IOptions<IdentityOptions> _options;
-
         public UserAppService(
             IIdentityUserAppService identityUserAppService,
             IdentityUserManager userManager,
@@ -57,8 +37,8 @@ namespace Lion.AbpPro.Users
                 Sorting = " LastModificationTime desc"
             };
 
-            long count = await _identityUserRepository.GetCountAsync(request.Filter);
-            List<Volo.Abp.Identity.IdentityUser> source = await _identityUserRepository
+            var count = await _identityUserRepository.GetCountAsync(request.Filter);
+            var source = await _identityUserRepository
                 .GetListAsync(request.Sorting, request.MaxResultCount, request.SkipCount, request.Filter);
 
             return new PagedResultDto<IdentityUserDto>(count,
@@ -79,7 +59,7 @@ namespace Lion.AbpPro.Users
                 SkipCount = input.SkipCount,
                 Sorting = " LastModificationTime desc"
             };
-            List<Volo.Abp.Identity.IdentityUser> source = await _identityUserRepository
+            var source = await _identityUserRepository
                 .GetListAsync(request.Sorting, request.MaxResultCount, request.SkipCount, request.Filter);
             var result = ObjectMapper.Map<List<Volo.Abp.Identity.IdentityUser>, List<ExportIdentityUserOutput>>(source);
             var bytes = await _excelExporter.ExportAsByteArray<ExportIdentityUserOutput>(result);

@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Lion.AbpPro.Extension.System;
-using Volo.Abp;
-using Volo.Abp.IdentityServer.ApiResources;
-using IdentityModel;
-
 namespace Lion.AbpPro.IdentityServer
 {
     public class IdenityServerApiResourceManager : AbpProDomainService
@@ -26,17 +16,26 @@ namespace Lion.AbpPro.IdentityServer
             bool includeDetails = false,
             CancellationToken cancellationToken = default)
         {
-            return _apiResourceRepository.GetListAsync("CreationTime desc", skipCount,
-                maxResultCount, filter,
+            return _apiResourceRepository.GetListAsync
+            (
+                "CreationTime desc",
+                skipCount,
+                maxResultCount,
+                filter,
                 includeDetails,
-                cancellationToken);
+                cancellationToken
+            );
         }
 
-        public Task<long> GetCountAsync(string filter = null,
+        public Task<long> GetCountAsync(
+            string filter = null,
             CancellationToken cancellationToken = default)
         {
-            return _apiResourceRepository.GetCountAsync(filter,
-                cancellationToken);
+            return _apiResourceRepository.GetCountAsync
+            (
+                filter,
+                cancellationToken
+            );
         }
 
         /// <summary>
@@ -65,10 +64,16 @@ namespace Lion.AbpPro.IdentityServer
                 await _apiResourceRepository.FindByNameAsync(name.Trim(), false, cancellationToken);
             if (null != apiResource)
             {
-                throw new UserFriendlyException(message: "ApiResource已存在");
+                throw new BusinessException(AbpProDomainErrorCodes.ApiResourceExist);
             }
 
-            apiResource = new ApiResource(id, name, displayName, description)
+            apiResource = new ApiResource
+            (
+                id,
+                name,
+                displayName,
+                description
+            )
             {
                 AllowedAccessTokenSigningAlgorithms = allowedAccessTokenSigningAlgorithms,
                 ShowInDiscoveryDocument = showInDiscoveryDocument,
@@ -83,8 +88,11 @@ namespace Lion.AbpPro.IdentityServer
             //
             // properties?.Distinct().ToList().ForEach(item => { apiResource.AddProperty(item.Key, item.Value); });
 
-            return await _apiResourceRepository.InsertAsync(apiResource,
-                cancellationToken: cancellationToken);
+            return await _apiResourceRepository.InsertAsync
+            (
+                apiResource,
+                cancellationToken: cancellationToken
+            );
         }
 
         public async Task DeleteAsync(
@@ -104,14 +112,13 @@ namespace Lion.AbpPro.IdentityServer
             bool showInDiscoveryDocument,
             string secret,
             List<string> scopes,
-            CancellationToken cancellationToken = default
-        )
+            CancellationToken cancellationToken = default)
         {
             var apiResource =
                 await _apiResourceRepository.FindByNameAsync(name.Trim(), true, cancellationToken);
             if (null == apiResource)
             {
-                throw new UserFriendlyException(message: "ApiResource不存在");
+                throw new BusinessException(AbpProDomainErrorCodes.ApiResourceNotExist);
             }
 
             apiResource.DisplayName = displayName;
@@ -148,8 +155,11 @@ namespace Lion.AbpPro.IdentityServer
             }
 
 
-            return await _apiResourceRepository.UpdateAsync(apiResource,
-                cancellationToken: cancellationToken);
+            return await _apiResourceRepository.UpdateAsync
+            (
+                apiResource,
+                cancellationToken: cancellationToken
+            );
         }
     }
 }

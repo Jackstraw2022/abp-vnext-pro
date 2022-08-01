@@ -1,9 +1,3 @@
-using System.Collections.Generic;
-using System.Reflection;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-
 namespace Lion.AbpPro.Shared.Hosting.Microservices.Swaggers
 {
     /// <summary>
@@ -46,7 +40,9 @@ namespace Lion.AbpPro.Shared.Hosting.Microservices.Swaggers
                 "/api/identity/my-profile",
                 "/api/identity",
                 "/api/multi-tenancy/tenants",
-                "/api/setting-management/emailing"
+                "/api/setting-management/emailing",
+                "/configuration",
+                "/outputcache"
             };
         }
     }

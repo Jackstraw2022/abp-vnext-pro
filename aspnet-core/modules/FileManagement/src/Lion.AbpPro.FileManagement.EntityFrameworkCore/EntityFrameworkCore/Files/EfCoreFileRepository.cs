@@ -1,22 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Lion.AbpPro.FileManagement.Files;
-using Microsoft.EntityFrameworkCore;
-using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
-using Volo.Abp.EntityFrameworkCore;
+﻿namespace Lion.AbpPro.FileManagement.EntityFrameworkCore.Files;
 
-namespace Lion.AbpPro.FileManagement.EntityFrameworkCore.Files;
-
-public class EfCoreFileRepository: EfCoreRepository<IFileManagementDbContext, File, Guid>, IFileRepository
+public class EfCoreFileRepository: EfCoreRepository<IFileManagementDbContext,Lion.AbpPro.FileManagement.Files.File, Guid>, IFileRepository
 {
     public EfCoreFileRepository(IDbContextProvider<IFileManagementDbContext> dbContextProvider) : base(dbContextProvider)
     {
     }
     
-    public async Task<List<File>> GetPagingListAsync(
+    public async Task<List<Lion.AbpPro.FileManagement.Files.File>> GetPagingListAsync(
         string filter = null,
         int maxResultCount = 10,
         int skipCount = 0,

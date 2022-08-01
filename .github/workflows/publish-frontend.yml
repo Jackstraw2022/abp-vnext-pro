@@ -13,10 +13,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm   
+        uses: pnpm/action-setup@v2.2.2
+        with:
+          version: 6.0.2
+
       - name: 编译|发布
         run: |
-          cd vben271
-          yarn
+          cd vben28
+          pnpm install
           npm run build
 
       - name: 部署->Vue
@@ -24,7 +29,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           ARGS: "-avzr --delete"
-          SOURCE: "vben271/dist"
+          SOURCE: "vben28/dist"
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: "/root/wwwroot"

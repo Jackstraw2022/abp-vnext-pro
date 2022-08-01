@@ -1,23 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Lion.AbpPro.ConfigurationOptions;
-using Lion.AbpPro.Users.Dtos;
-using IdentityModel;
-using Lion.AbpPro.Extension.Customs.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Volo.Abp;
-using Volo.Abp.Identity;
-using Volo.Abp.Security.Claims;
-
-
 namespace Lion.AbpPro.Users
 {
     public class AccountAppService : AbpProAppService, IAccountAppService
@@ -26,8 +6,7 @@ namespace Lion.AbpPro.Users
         private readonly JwtOptions _jwtOptions;
         private readonly Microsoft.AspNetCore.Identity.SignInManager<IdentityUser> _signInManager;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IConfiguration _configuretion;
-
+        private readonly IConfiguration _configuration;
         private readonly Volo.Abp.Domain.Repositories.IRepository<IdentityRole> _identityRoleRepository;
 
         public AccountAppService(
@@ -35,14 +14,14 @@ namespace Lion.AbpPro.Users
             IOptionsSnapshot<JwtOptions> jwtOptions,
             Microsoft.AspNetCore.Identity.SignInManager<IdentityUser> signInManager,
             IHttpClientFactory httpClientFactory,
-            IConfiguration configuretion,
+            IConfiguration configuration,
             Volo.Abp.Domain.Repositories.IRepository<IdentityRole> identityRoleRepository)
         {
             _userManager = userManager;
             _jwtOptions = jwtOptions.Value;
             _signInManager = signInManager;
             _httpClientFactory = httpClientFactory;
-            _configuretion = configuretion;
+            _configuration = configuration;
             _identityRoleRepository = identityRoleRepository;
         }
 
@@ -52,12 +31,12 @@ namespace Lion.AbpPro.Users
             var result = await _signInManager.PasswordSignInAsync(input.Name, input.Password, false, true);
             if (result.IsNotAllowed)
             {
-                throw new UserFriendlyException("当前用户已锁定");
+                throw new BusinessException(AbpProDomainErrorCodes.UserLockedOut);
             }
 
             if (!result.Succeeded)
             {
-                throw new UserFriendlyException("用户名或者密码错误");
+                throw new BusinessException(AbpProDomainErrorCodes.UserOrPasswordMismatch);
             }
 
             var user = await _userManager.FindByNameAsync(input.Name);
@@ -77,7 +56,7 @@ namespace Lion.AbpPro.Users
             var user = await _userManager.FindByNameAsync(response.name);
             if (!user.IsActive)
             {
-                throw new UserFriendlyException("当前用户已锁定");
+                throw new BusinessException(AbpProDomainErrorCodes.UserLockedOut);
             }
 
             return await BuildResult(user);
@@ -93,12 +72,12 @@ namespace Lion.AbpPro.Users
             var headers = new Dictionary<string, string> { { "Accept", $"application/json" } };
             // 通过code获取access token
             var accessTokenUrl =
-                $"login/oauth/access_token?client_id={_configuretion.GetValue<string>("HttpClient:Github:ClientId")}&client_secret={_configuretion.GetValue<string>("HttpClient:Github:ClientSecret")}&code={code}";
+                $"login/oauth/access_token?client_id={_configuration.GetValue<string>("HttpClient:Github:ClientId")}&client_secret={_configuration.GetValue<string>("HttpClient:Github:ClientSecret")}&code={code}";
             var accessTokenResponse = await _httpClientFactory.GetAsync<GithubAccessTokenResponse>(HttpClientNameConsts.Github, accessTokenUrl, headers);
 
             // 获取github用户信息
             headers.Add("Authorization", $"token {accessTokenResponse.Access_token}");
-            headers.Add("User-Agent", _configuretion.GetValue<string>("HttpClient:GithubApi:ClientName"));
+            headers.Add("User-Agent", _configuration.GetValue<string>("HttpClient:GithubApi:ClientName"));
             var userResponse = await _httpClientFactory.GetAsync<LoginGithubResponse>(HttpClientNameConsts.GithubApi, "/user", headers);
 
             var user = await _userManager.FindByEmailAsync(userResponse.email);
@@ -116,7 +95,7 @@ namespace Lion.AbpPro.Users
         {
             var result = new LoginOutput();
             var roles = await _identityRoleRepository.GetListAsync(e => e.IsDefault);
-            if (roles == null || roles.Count == 0) throw new UserFriendlyException("系统未配置默认角色");
+            if (roles == null || roles.Count == 0) throw new AbpAuthorizationException();
             var userId = GuidGenerator.Create();
 
             var user = new IdentityUser(userId, userName, email)
@@ -139,9 +118,9 @@ namespace Lion.AbpPro.Users
 
         private async Task<LoginOutput> BuildResult(IdentityUser user)
         {
-            if (!user.IsActive) throw new UserFriendlyException("当前用户已被锁定");
+            if (!user.IsActive) throw new BusinessException(AbpProDomainErrorCodes.UserLockedOut);
             var roles = await _userManager.GetRolesAsync(user);
-            if (roles == null || roles.Count == 0) throw new UserFriendlyException("当前用户未分配角色");
+            if (roles == null || roles.Count == 0) throw new AbpAuthorizationException();
             var token = GenerateJwt(user.Id, user.UserName, user.Name, user.Email,
                 user.TenantId.ToString(), roles.ToList());
             var loginOutput = ObjectMapper.Map<IdentityUser, LoginOutput>(user);
