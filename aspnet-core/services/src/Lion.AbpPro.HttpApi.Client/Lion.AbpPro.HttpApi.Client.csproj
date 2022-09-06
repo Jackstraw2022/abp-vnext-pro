@@ -8,18 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\modules\BasicManagement\src\Lion.AbpPro.BasicManagement.HttpApi.Client\Lion.AbpPro.BasicManagement.HttpApi.Client.csproj" />
     <ProjectReference Include="..\..\..\modules\DataDictionaryManagement\src\Lion.AbpPro.DataDictionaryManagement.HttpApi.Client\Lion.AbpPro.DataDictionaryManagement.HttpApi.Client.csproj" />
     <ProjectReference Include="..\..\..\modules\FileManagement\src\Lion.AbpPro.FileManagement.HttpApi.Client\Lion.AbpPro.FileManagement.HttpApi.Client.csproj" />
     <ProjectReference Include="..\Lion.AbpPro.Application.Contracts\Lion.AbpPro.Application.Contracts.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Volo.Abp.Account.HttpApi.Client" />
-    <PackageReference Include="Volo.Abp.Identity.HttpApi.Client" />
-    <PackageReference Include="Volo.Abp.PermissionManagement.HttpApi.Client" />
-    <PackageReference Include="Volo.Abp.TenantManagement.HttpApi.Client" />
-    <PackageReference Include="Volo.Abp.FeatureManagement.HttpApi.Client" />
-    <PackageReference Include="Volo.Abp.SettingManagement.HttpApi.Client" />
-  </ItemGroup>
+ 
 
 </Project>
