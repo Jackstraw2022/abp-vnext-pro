@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Volo.Abp.Account;
 using Volo.Abp.Identity.Localization;
+using IdentityRole = Volo.Abp.Identity.IdentityRole;
 
 namespace Lion.AbpPro.BasicManagement.Users
 {
@@ -17,22 +18,19 @@ namespace Lion.AbpPro.BasicManagement.Users
         private readonly IIdentityUserRepository _identityUserRepository;
         private readonly IExcelExporter _excelExporter;
         private readonly IOptions<IdentityOptions> _options;
-        private readonly IStringLocalizer<IdentityResource> _localizer;
 
         public UserAppService(
             IIdentityUserAppService identityUserAppService,
             IdentityUserManager userManager,
             IIdentityUserRepository userRepository,
             IExcelExporter excelExporter,
-            IOptions<IdentityOptions> options,
-            IStringLocalizer<IdentityResource> localizer)
+            IOptions<IdentityOptions> options)
         {
             _identityUserAppService = identityUserAppService;
             _userManager = userManager;
             _identityUserRepository = userRepository;
             _excelExporter = excelExporter;
             _options = options;
-            _localizer = localizer;
         }
 
         /// <summary>
@@ -74,7 +72,7 @@ namespace Lion.AbpPro.BasicManagement.Users
                 .GetListAsync(request.Sorting, request.MaxResultCount, request.SkipCount, request.Filter);
             var result = ObjectMapper.Map<List<Volo.Abp.Identity.IdentityUser>, List<ExportIdentityUserOutput>>(source);
             var bytes = await _excelExporter.ExportAsByteArray<ExportIdentityUserOutput>(result);
-            return new XlsxFileResult(bytes: bytes, fileDownloadName: $"用户导出列表{DateTime.Now:yyyyMMdd}");
+            return new XlsxFileResult(bytes: bytes, fileDownloadName: $"用户导出列表{Clock.Now:yyyyMMdd}");
         }
 
         /// <summary>
@@ -117,7 +115,10 @@ namespace Lion.AbpPro.BasicManagement.Users
         /// <returns></returns>
         public async Task<ListResultDto<IdentityRoleDto>> GetRoleByUserId(IdInput input)
         {
-            return await _identityUserAppService.GetRolesAsync(input.Id);
+            var roles = await _identityUserRepository.GetRolesAsync(input.Id);
+            return new ListResultDto<IdentityRoleDto>(
+                ObjectMapper.Map<List<IdentityRole>, List<IdentityRoleDto>>(roles)
+            );
         }
 
         /// <summary>
