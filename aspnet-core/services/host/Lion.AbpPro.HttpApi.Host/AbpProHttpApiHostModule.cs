@@ -1,4 +1,5 @@
 using Hangfire.Redis;
+using Lion.AbpPro.CAP.EntityFrameworkCore;
 using Swagger;
 using Volo.Abp.BackgroundJobs.Hangfire;
 using Volo.Abp.Timing;
@@ -15,6 +16,7 @@ namespace Lion.AbpPro
         typeof(AbpAccountWebModule),
         typeof(AbpProApplicationModule),
         typeof(LionAbpProCapModule),
+        typeof(LionAbpProCapEntityFrameworkCoreModule),
         typeof(AbpAspNetCoreMvcUiBasicThemeModule),
         typeof(AbpCachingStackExchangeRedisModule),
         typeof(AbpBackgroundJobsHangfireModule)
@@ -39,6 +41,7 @@ namespace Lion.AbpPro
             ConfigureIdentity(context);
             ConfigureCap(context);
             ConfigureAuditLog(context);
+            ConfigurationSignalR(context);
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -101,7 +104,8 @@ namespace Lion.AbpPro
             Configure<AbpBackgroundJobOptions>(options => { options.IsJobExecutionEnabled = true; });
             context.Services.AddHangfire(config =>
             {
-                config.UseRedisStorage(ConnectionMultiplexer.Connect(context.Services.GetConfiguration().GetValue<string>("Hangfire:Redis:Host")), redisStorageOptions).WithJobExpirationTimeout(TimeSpan.FromDays(7));
+                config.UseRedisStorage(ConnectionMultiplexer.Connect(context.Services.GetConfiguration().GetValue<string>("Hangfire:Redis:Host")), redisStorageOptions)
+                    .WithJobExpirationTimeout(TimeSpan.FromDays(7));
                 var delaysInSeconds = new[] { 10, 60, 60 * 3 }; // 重试时间间隔
                 const int Attempts = 3; // 重试次数
                 config.UseFilter(new AutomaticRetryAttribute() { Attempts = Attempts, DelaysInSeconds = delaysInSeconds });
@@ -212,6 +216,18 @@ namespace Lion.AbpPro
             context.Services.Configure<IdentityOptions>(options => { options.Lockout = new LockoutOptions() { AllowedForNewUsers = false }; });
         }
 
+        private void ConfigurationSignalR(ServiceConfigurationContext context)
+        {
+            var redisConnection = context.Services.GetConfiguration()["Redis:Configuration"];
+
+            if (redisConnection.IsNullOrWhiteSpace())
+            {
+                throw new UserFriendlyException(message: "Redis连接字符串未配置.");
+            }
+
+            context.Services.AddSignalR().AddStackExchangeRedis(redisConnection, options => { options.Configuration.ChannelPrefix = "Lion.AbpPro"; });
+        }
+        
         private void ConfigureSwaggerServices(ServiceConfigurationContext context)
         {
             context.Services.AddSwaggerGen(
@@ -288,6 +304,7 @@ namespace Lion.AbpPro
             {
                 context.AddAbpCap(capOptions =>
                 {
+                    capOptions.SetCapDbConnectionString(configuration["ConnectionStrings:Default"]);
                     capOptions.UseEntityFramework<AbpProDbContext>();
                     capOptions.UseRabbitMQ(option =>
                     {
@@ -298,7 +315,9 @@ namespace Lion.AbpPro
 
                     var hostingEnvironment = context.Services.GetHostingEnvironment();
                     bool auth = !hostingEnvironment.IsDevelopment();
-                    capOptions.UseDashboard(options => { options.UseAuth = auth;
+                    capOptions.UseDashboard(options =>
+                    {
+                        options.UseAuth = auth;
                         options.AuthorizationPolicy = LionAbpProCapPermissions.CapManagement.Cap;
                     });
                 });
@@ -310,7 +329,7 @@ namespace Lion.AbpPro
                     capOptions.UseInMemoryStorage();
                     capOptions.UseInMemoryMessageQueue();
                     var hostingEnvironment = context.Services.GetHostingEnvironment();
-                    bool auth = !hostingEnvironment.IsDevelopment();
+                    var auth = !hostingEnvironment.IsDevelopment();
                     capOptions.UseDashboard(options => { options.UseAuth = auth; });
                 });
             }

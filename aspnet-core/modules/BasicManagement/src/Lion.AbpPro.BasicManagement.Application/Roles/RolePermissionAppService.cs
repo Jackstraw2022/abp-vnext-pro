@@ -17,30 +17,24 @@ namespace Lion.AbpPro.BasicManagement.Roles
         /// <summary>
         /// 获取所有权限
         /// </summary>
-        /// <returns></returns>
         public async Task<PermissionOutput> GetPermissionAsync(GetPermissionInput input)
         {
-            var permissions =
-                await _rolePermissionAppService.GetAsync(input.ProviderName, input.ProviderKey);
+            var permissions = await _rolePermissionAppService.GetAsync(input.ProviderName, input.ProviderKey);
             return BuildTreeData(permissions.Groups);
         }
 
         /// <summary>
         /// 更新权限
         /// </summary>
-        /// <param name="input"></param>
         [Authorize(IdentityPermissions.Roles.ManagePermissions)]
         public async Task UpdatePermissionAsync(UpdateRolePermissionsInput input)
         {
-            await _rolePermissionAppService.UpdateAsync(input.ProviderName, input.ProviderKey,
-                input.UpdatePermissionsDto);
+            await _rolePermissionAppService.UpdateAsync(input.ProviderName, input.ProviderKey, input.UpdatePermissionsDto);
         }
 
         /// <summary>
         /// 生成权限树
         /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
         private PermissionOutput BuildTreeData(List<PermissionGroupDto> input)
         {
             var result = new PermissionOutput();
@@ -60,7 +54,10 @@ namespace Lion.AbpPro.BasicManagement.Roles
                         ? L[$"Permission:SystemManagement"]
                         : group.DisplayName
                 };
-                result.Grants.Add(group.Name);
+                if (group.Permissions.Any(p => p.IsGranted == true && p.Name.StartsWith(group.Name)))
+                {
+                    result.Grants.Add(group.Name);
+                }
                 // 获取所有已授权和未授权权限集合
                 foreach (var item in group.Permissions)
                 {
@@ -71,12 +68,12 @@ namespace Lion.AbpPro.BasicManagement.Roles
                     {
                         result.Grants.Add(item.Name);
                     }
-                    else
-                    {
-                        // 只要没有授权的，就移除顶级的分组
-                        result.Grants.Remove(group.Name);
-                        result.Grants.Remove(item.ParentName);
-                    }
+                    //else
+                    //{
+                    //    // 只要没有授权的，就移除顶级的分组
+                    //    result.Grants.Remove(group.Name);
+                    //    result.Grants.Remove(item.ParentName);
+                    //}
                 }
 
                 // 递归菜单
