@@ -18,7 +18,7 @@
 
 ## 📦 快速开始
 
-- 安装Cli，[Git 仓库](https://github.com/WangJunZzz/Lion.AbpPro.Cli)
+- 安装Cli
 ```bash
 dotnet tool install Lion.AbpPro.Cli -g
 ```
@@ -26,23 +26,28 @@ dotnet tool install Lion.AbpPro.Cli -g
 - 生成源码版本
 
 ```bash
-lion.abp new abp-vnext-pro -c 公司名称 -p 项目名称  -v 版本号(可选)
+lion.abp new -t pro -c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录
 ```
 
 - nuget包形式的网关基础版本
    -  abp自带的所有模块，pro的通知模块，数据字典模块 以及ocelot网关。
 
 ```bash
-lion.abp new abp-vnext-pro-basic -c 公司名称 -p 项目名称 -v 版本(可选) 
+lion.abp new -t pro.all -c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录
 ```
 
 - nuget包形式的基础版本
    - abp自带的所有模块，pro的通知模块，数据字典模块 无ocelot网关
 
 ```bash
-lion.abp new abp-vnext-pro-basic-no-ocelot -c 公司名称 -p 项目名称 -v 版本(可选) 
+lion.abp new -t pro.simplify -c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录
 ```
 
+- 模块
+
+```bash
+lion.abp new -t pro.module -c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录
+```
 
 
 ## ✨ 系统功能
@@ -93,7 +98,8 @@ lion.abp new abp-vnext-pro-basic-no-ocelot -c 公司名称 -p 项目名称 -v �
   - `wip` 开发中
 
 ## ✒️交流
-- QQ 群：686933575
+- QQ 1群：<s>686933575(已满)</s> 
+- QQ 2群：862717726
 
 ## 💖赞助
 - Star就是对该项目的最大肯定!
