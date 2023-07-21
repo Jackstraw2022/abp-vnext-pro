@@ -1,16 +1,11 @@
-﻿using Lion.AbpPro.BasicManagement.Localization;
-using Volo.Abp.Localization;
-using Volo.Abp.Settings;
-using Volo.Abp.Timing;
-
-namespace Lion.AbpPro.BasicManagement.Settings;
+﻿namespace Lion.AbpPro.BasicManagement.Settings;
 
 public class BasicManagementSettingDefinitionProvider : SettingDefinitionProvider
 {
     public override void Define(ISettingDefinitionContext context)
     {
         //Define your own settings here. Example:
-        //context.Add(new SettingDefinition(BasicManagementSettings.MySetting1));
+        //context.Add(new SettingDefinition(AbpProSettingConsts.MySetting1));
         OverrideDefaultSettings(context);
     }
 
@@ -19,11 +14,6 @@ public class BasicManagementSettingDefinitionProvider : SettingDefinitionProvide
     /// </summary>
     private static void OverrideDefaultSettings(ISettingDefinitionContext context)
     {
-
-       context.GetOrNull(LocalizationSettingNames.DefaultLanguage)
-            .WithProperty(BasicManagementSettings.Group.Default, BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default, BasicManagementSettings.ControlType.TypeText);
-        
         context.Add(
             new SettingDefinition(TimingSettingNames.TimeZone,
                     "China Standard Time",
@@ -31,50 +21,50 @@ public class BasicManagementSettingDefinitionProvider : SettingDefinitionProvide
                     L("Description:Abp.Timing.Timezone"))
                 .WithProperty(BasicManagementSettings.Group.Default,
                     BasicManagementSettings.Group.SystemManagement)
-                .WithProperty(BasicManagementSettings.ControlType.Default,
-                    BasicManagementSettings.ControlType.TypeText));
+                .WithProperty(AbpProSettingConsts.ControlType.Default,
+                    AbpProSettingConsts.ControlType.TypeText));
 
         context.GetOrNull("Abp.Identity.Password.RequiredLength")
             .WithProperty(BasicManagementSettings.Group.Default,
                 BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default,
-                BasicManagementSettings.ControlType.Number);
+            .WithProperty(AbpProSettingConsts.ControlType.Default,
+                AbpProSettingConsts.ControlType.Number);
 
         context.GetOrNull("Abp.Identity.Password.RequiredLength")
             .WithProperty(BasicManagementSettings.Group.Default,
                 BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default,
-                BasicManagementSettings.ControlType.Number);
+            .WithProperty(AbpProSettingConsts.ControlType.Default,
+                AbpProSettingConsts.ControlType.Number);
 
         context.GetOrNull("Abp.Identity.Password.RequiredUniqueChars")
             .WithProperty(BasicManagementSettings.Group.Default,
                 BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default,
-                BasicManagementSettings.ControlType.Number);
+            .WithProperty(AbpProSettingConsts.ControlType.Default,
+                AbpProSettingConsts.ControlType.Number);
 
         context.GetOrNull("Abp.Identity.Password.RequireNonAlphanumeric")
             .WithProperty(BasicManagementSettings.Group.Default,
                 BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default,
-                BasicManagementSettings.ControlType.TypeCheckBox);
+            .WithProperty(AbpProSettingConsts.ControlType.Default,
+                AbpProSettingConsts.ControlType.TypeCheckBox);
 
         context.GetOrNull("Abp.Identity.Password.RequireLowercase")
             .WithProperty(BasicManagementSettings.Group.Default,
                 BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default,
-                BasicManagementSettings.ControlType.TypeCheckBox);
+            .WithProperty(AbpProSettingConsts.ControlType.Default,
+                AbpProSettingConsts.ControlType.TypeCheckBox);
 
         context.GetOrNull("Abp.Identity.Password.RequireUppercase")
             .WithProperty(BasicManagementSettings.Group.Default,
                 BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default,
-                BasicManagementSettings.ControlType.TypeCheckBox);
+            .WithProperty(AbpProSettingConsts.ControlType.Default,
+                AbpProSettingConsts.ControlType.TypeCheckBox);
 
         context.GetOrNull("Abp.Identity.Password.RequireDigit")
             .WithProperty(BasicManagementSettings.Group.Default,
                 BasicManagementSettings.Group.SystemManagement)
-            .WithProperty(BasicManagementSettings.ControlType.Default,
-                BasicManagementSettings.ControlType.TypeCheckBox);
+            .WithProperty(AbpProSettingConsts.ControlType.Default,
+                AbpProSettingConsts.ControlType.TypeCheckBox);
     }
 
 

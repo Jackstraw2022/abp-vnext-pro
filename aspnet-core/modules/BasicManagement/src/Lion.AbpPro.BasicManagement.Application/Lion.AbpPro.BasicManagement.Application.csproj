@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Lion.AbpPro.BasicManagement.Domain\Lion.AbpPro.BasicManagement.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="$(UserProfile)\.nuget\packages\*\*\contentFiles\any\*\*.abppkg*.json" />
+  </ItemGroup>
+
 </Project>

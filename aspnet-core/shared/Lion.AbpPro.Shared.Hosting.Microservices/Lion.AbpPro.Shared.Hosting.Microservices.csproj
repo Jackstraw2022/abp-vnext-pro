@@ -45,4 +45,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\frameworks\src\Lion.AbpPro.Core\Lion.AbpPro.Core.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <Content Remove="$(UserProfile)\.nuget\packages\*\*\contentFiles\any\*\*.abppkg*.json" />
+    </ItemGroup>
 </Project>

@@ -1,6 +1,3 @@
-using Lion.AbpPro;
-using Swagger;
-
 namespace MyCompanyName.MyProjectName
 {
     [DependsOn(
@@ -27,6 +24,7 @@ namespace MyCompanyName.MyProjectName
             ConfigureIdentity(context);
             ConfigureAuditLog(context);
             ConfigurationSignalR(context);
+            ConfigurationMultiTenancy();
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -34,7 +32,7 @@ namespace MyCompanyName.MyProjectName
             var app = context.GetApplicationBuilder();
             var configuration = context.GetConfiguration();
 
-            app.UseAbpRequestLocalization();
+            app.UseAbpProRequestLocalization();
             app.UseCorrelationId();
             app.UseStaticFiles();
             app.UseMiniProfiler();
@@ -272,6 +270,11 @@ namespace MyCompanyName.MyProjectName
                     options.IgnoredUrls.Add("/hangfire/stats");
                     options.IgnoredUrls.Add("/cap");
                 });
+        }
+        
+        private void ConfigurationMultiTenancy()
+        {
+            Configure<AbpMultiTenancyOptions>(options => { options.IsEnabled = MultiTenancyConsts.IsEnabled; });
         }
     }
 }

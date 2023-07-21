@@ -15,4 +15,7 @@
         <PackageReference Include="Volo.Abp.Swashbuckle" />
         <PackageReference Include="Swashbuckle.AspNetCore" />
     </ItemGroup>
+    <ItemGroup>
+        <Content Remove="$(UserProfile)\.nuget\packages\*\*\contentFiles\any\*\*.abppkg*.json" />
+    </ItemGroup>
 </Project>
