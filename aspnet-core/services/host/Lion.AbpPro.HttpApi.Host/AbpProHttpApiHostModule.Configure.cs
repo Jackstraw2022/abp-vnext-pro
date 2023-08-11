@@ -1,82 +1,38 @@
-namespace MyCompanyName.MyProjectName;
+﻿namespace Lion.AbpPro;
 
-[DependsOn(
-    typeof(MyProjectNameHttpApiModule),
-    typeof(AbpProSharedHostingMicroserviceModule),
-    typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
-    typeof(MyProjectNameEntityFrameworkCoreModule),
-    typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
-    typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpAccountWebModule),
-    typeof(MyProjectNameApplicationModule),
-    typeof(AbpAspNetCoreMvcUiBasicThemeModule),
-    typeof(AbpCachingStackExchangeRedisModule)
-)]
-public class MyProjectNameHttpApiHostModule : AbpModule
+public partial class AbpProHttpApiHostModule
 {
-        
-    public override void ConfigureServices(ServiceConfigurationContext context)
+    private void ConfigureHangfire(ServiceConfigurationContext context)
     {
-        var configuration = context.Services.GetConfiguration();
-        ConfigureCache(context);
-        ConfigureSwaggerServices(context);
-        ConfigureJwtAuthentication(context, configuration);
-        ConfigureMiniProfiler(context);
-        ConfigureIdentity(context);
-        ConfigureAuditLog(context);
-        ConfigurationSignalR(context);
-        ConfigurationMultiTenancy();
-    }
-
-    public override void OnApplicationInitialization(ApplicationInitializationContext context)
-    {
-        var app = context.GetApplicationBuilder();
-        app.UseAbpProRequestLocalization();
-        app.UseCorrelationId();
-        app.UseStaticFiles();
-        app.UseMiniProfiler();
-        app.UseRouting();
-        app.UseCors(MyProjectNameHttpApiHostConst.DefaultCorsPolicyName);
-        app.UseAuthentication();
-
-        if (MultiTenancyConsts.IsEnabled)
+        var redisStorageOptions = new RedisStorageOptions()
         {
-            app.UseMultiTenancy();
-        }
+            Db = context.Services.GetConfiguration().GetValue<int>("Hangfire:Redis:DB")
+        };
 
-        app.UseAuthorization();
-        app.UseSwagger();
-        app.UseAbpSwaggerUI(options =>
+        Configure<AbpBackgroundJobOptions>(options => { options.IsJobExecutionEnabled = true; });
+
+        context.Services.AddHangfire(config =>
         {
-            options.SwaggerEndpoint("/swagger/MyProjectName/swagger.json", "MyProjectName API");
-            options.DocExpansion(DocExpansion.None);
-            options.DefaultModelsExpandDepth(-1);
+            config.UseRedisStorage(
+                    context.Services.GetConfiguration().GetValue<string>("Hangfire:Redis:Host"), redisStorageOptions)
+                .WithJobExpirationTimeout(TimeSpan.FromDays(7));
+            var delaysInSeconds = new[] { 10, 60, 60 * 3 }; // 重试时间间隔
+            const int Attempts = 3; // 重试次数
+            config.UseFilter(new AutomaticRetryAttribute() { Attempts = Attempts, DelaysInSeconds = delaysInSeconds });
+            //config.UseFilter(new AutoDeleteAfterSuccessAttribute(TimeSpan.FromDays(7)));
+            config.UseFilter(new JobRetryLastFilter(Attempts));
         });
-
-        app.UseAuditing();
-        app.UseAbpSerilogEnrichers();
-
-        app.UseUnitOfWork();
-        app.UseConfiguredEndpoints(endpoints => { endpoints.MapHealthChecks("/health"); });
-         
     }
-    private void ConfigurationSignalR(ServiceConfigurationContext context)
-    {
-        var redisConnection = context.Services.GetConfiguration().GetValue<string>("Redis:Configuration");
 
-        if (redisConnection.IsNullOrWhiteSpace())
-        {
-            throw new UserFriendlyException(message: "Redis连接字符串未配置.");
-        }
-
-        context.Services.AddSignalR().AddStackExchangeRedis(redisConnection, options => { options.Configuration.ChannelPrefix = "Lion.AbpPro"; });
-    }
     /// <summary>
     /// 配置MiniProfiler
     /// </summary>
     private void ConfigureMiniProfiler(ServiceConfigurationContext context)
     {
-        context.Services.AddMiniProfiler(options => options.RouteBasePath = "/profiler").AddEntityFramework();
+        if (context.Services.GetConfiguration().GetValue("MiniProfiler:Enabled", false))
+        {
+            context.Services.AddMiniProfiler(options => options.RouteBasePath = "/profiler").AddEntityFramework();
+        }
     }
 
     /// <summary>
@@ -99,7 +55,7 @@ public class MyProjectNameHttpApiHostModule : AbpModule
                         ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateLifetime = true,
-                        //ClockSkew = TimeSpan.Zero,
+                        ClockSkew = TimeSpan.Zero,
                         ValidIssuer = configuration["Jwt:Issuer"],
                         ValidAudience = configuration["Jwt:Audience"],
                         IssuerSigningKey =
@@ -134,7 +90,7 @@ public class MyProjectNameHttpApiHostModule : AbpModule
 
                         if (accessToken.IsNullOrWhiteSpace())
                         {
-                            accessToken = currentContext.Request.Cookies[MyProjectNameHttpApiHostConst.DefaultCookieName];
+                            accessToken = currentContext.Request.Cookies[AbpProHttpApiHostConst.DefaultCookieName];
                         }
 
                         currentContext.Token = accessToken;
@@ -147,7 +103,6 @@ public class MyProjectNameHttpApiHostModule : AbpModule
             });
     }
 
-   
 
     /// <summary>
     /// Redis缓存
@@ -155,15 +110,13 @@ public class MyProjectNameHttpApiHostModule : AbpModule
     private void ConfigureCache(ServiceConfigurationContext context)
     {
         Configure<AbpDistributedCacheOptions>(
-            options => { options.KeyPrefix = "MyProjectName:"; });
+            options => { options.KeyPrefix = "AbpPro:"; });
         var configuration = context.Services.GetConfiguration();
-        var redis = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]);
+        var redis = ConnectionMultiplexer.Connect(configuration.GetValue<string>("Redis:Configuration"));
         context.Services
             .AddDataProtection()
-            .PersistKeysToStackExchangeRedis(redis, "MyProjectName-Protection-Keys");
+            .PersistKeysToStackExchangeRedis(redis, "AbpPro-Protection-Keys");
     }
-
-
 
     /// <summary>
     /// 配置Identity
@@ -173,7 +126,15 @@ public class MyProjectNameHttpApiHostModule : AbpModule
         context.Services.Configure<IdentityOptions>(options => { options.Lockout = new LockoutOptions() { AllowedForNewUsers = false }; });
     }
 
-    private static void ConfigureSwaggerServices(ServiceConfigurationContext context)
+    private void ConfigurationSignalR(ServiceConfigurationContext context)
+    {
+        context.Services
+            .AddSignalR()
+            .AddStackExchangeRedis(context.Services.GetConfiguration().GetValue<string>("Redis:Configuration"),
+                options => { options.Configuration.ChannelPrefix = "Lion.AbpPro"; });
+    }
+
+    private void ConfigureSwaggerServices(ServiceConfigurationContext context)
     {
         context.Services.AddSwaggerGen(
             options =>
@@ -181,8 +142,8 @@ public class MyProjectNameHttpApiHostModule : AbpModule
                 // 文件下载类型
                 options.MapType<FileContentResult>(() => new OpenApiSchema() { Type = "file" });
 
-                options.SwaggerDoc("MyProjectName",
-                    new OpenApiInfo { Title = "MyCompanyNameMyProjectName API", Version = "v1" });
+                options.SwaggerDoc("AbpPro",
+                    new OpenApiInfo { Title = "AbpPro API", Version = "v1" });
                 options.DocInclusionPredicate((docName, description) => true);
                 options.EnableAnnotations(); // 启用注解
                 options.DocumentFilter<HiddenAbpDefaultApiFilter>();
@@ -241,7 +202,45 @@ public class MyProjectNameHttpApiHostModule : AbpModule
     }
 
 
-    
+    private void ConfigureCap(ServiceConfigurationContext context)
+    {
+        var configuration = context.Services.GetConfiguration();
+        var enabled = configuration.GetValue("Cap:Enabled", false);
+        if (enabled)
+        {
+            context.AddAbpCap(capOptions =>
+            {
+                capOptions.SetCapDbConnectionString(configuration["ConnectionStrings:Default"]);
+                capOptions.UseEntityFramework<AbpProDbContext>();
+                capOptions.UseRabbitMQ(option =>
+                {
+                    option.HostName = configuration.GetValue<string>("Cap:RabbitMq:HostName");
+                    option.UserName = configuration.GetValue<string>("Cap:RabbitMq:UserName");
+                    option.Password = configuration.GetValue<string>("Cap:RabbitMq:Password");
+                });
+
+                var hostingEnvironment = context.Services.GetHostingEnvironment();
+                bool auth = !hostingEnvironment.IsDevelopment();
+                capOptions.UseDashboard(options =>
+                {
+                    options.UseAuth = auth;
+                    options.AuthorizationPolicy = AbpProCapPermissions.CapManagement.Cap;
+                });
+            });
+        }
+        else
+        {
+            context.AddAbpCap(capOptions =>
+            {
+                capOptions.UseInMemoryStorage();
+                capOptions.UseInMemoryMessageQueue();
+                var hostingEnvironment = context.Services.GetHostingEnvironment();
+                var auth = !hostingEnvironment.IsDevelopment();
+                capOptions.UseDashboard(options => { options.UseAuth = auth; });
+            });
+        }
+    }
+
     /// <summary>
     /// 审计日志
     /// </summary>
@@ -253,7 +252,7 @@ public class MyProjectNameHttpApiHostModule : AbpModule
             {
                 options.IsEnabled = true;
                 options.EntityHistorySelectors.AddAllEntities();
-                options.ApplicationName = "MyCompanyName.MyProjectName";
+                options.ApplicationName = "Lion.AbpPro";
             }
         );
 
@@ -262,10 +261,12 @@ public class MyProjectNameHttpApiHostModule : AbpModule
             {
                 options.IgnoredUrls.Add("/AuditLogs/page");
                 options.IgnoredUrls.Add("/hangfire/stats");
+                options.IgnoredUrls.Add("/hangfire/recurring/trigger");
                 options.IgnoredUrls.Add("/cap");
+                options.IgnoredUrls.Add("/");
             });
     }
-        
+
     private void ConfigurationMultiTenancy()
     {
         Configure<AbpMultiTenancyOptions>(options => { options.IsEnabled = MultiTenancyConsts.IsEnabled; });

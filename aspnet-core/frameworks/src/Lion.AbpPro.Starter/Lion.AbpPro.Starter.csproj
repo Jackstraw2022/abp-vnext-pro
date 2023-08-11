@@ -3,12 +3,12 @@
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <AssemblyName>Lion.AbpPro.Starter</AssemblyName>
         <RootNamespace />
-        <NoWarn>CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625;EF1001</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Volo.Abp.EntityFrameworkCore" />
+        <PackageReference Include="Volo.Abp.Autofac" />
+        <PackageReference Include="Volo.Abp.Threading" />
     </ItemGroup>
 </Project>
