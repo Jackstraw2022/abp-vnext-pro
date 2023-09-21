@@ -14,17 +14,6 @@ jobs:
         with:
           dotnet-version: 7.0.x
           include-prerelease: True
-      - name: Build
-        run: dotnet build aspnet-core/Lion.AbpPro.sln
-
-      - name: Run Xunit
-        run: dotnet test aspnet-core/services/test/Lion.AbpPro.Domain.Tests/Lion.AbpPro.Domain.Tests.csproj
-
-      - name: Publish Lion.AbpPro.HttpApi.Host
-        run: dotnet publish aspnet-core/services/host/Lion.AbpPro.HttpApi.Host/Lion.AbpPro.HttpApi.Host.csproj -o aspnet-core/services/host/Lion.AbpPro.HttpApi.Host/publish
-
-      - name: Publish Lion.AbpPro.DbMigrator
-        run: dotnet publish aspnet-core/services/src/Lion.AbpPro.DbMigrator/Lion.AbpPro.DbMigrator.csproj -o aspnet-core/services/src/Lion.AbpPro.DbMigrator/publish
 
       - name: Setting Version
         id: vars
@@ -45,16 +34,9 @@ jobs:
       - name: Push Lion.AbpPro.HttpApi.Host Image
         uses: docker/build-push-action@v2
         with:
-          context: aspnet-core/services/host/Lion.AbpPro.HttpApi.Host
+          context: aspnet-core
           push: true
           tags: zzzwangjun/lion.abp.pro:${{ steps.vars.outputs.RELEASE_VERSION }}
-
-      - name: Push Lion.AbpPro.DbMigrator Image
-        uses: docker/build-push-action@v2
-        with:
-          context: aspnet-core/services/src/Lion.AbpPro.DbMigrator
-          push: true
-          tags: zzzwangjun/lion.abp.pro.migrator:${{ steps.vars.outputs.RELEASE_VERSION }}
 
   vben28:
     runs-on: ubuntu-latest
@@ -64,17 +46,6 @@ jobs:
         uses: actions/checkout@v2.3.1
         with:
           persist-credentials: false
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2.2.2
-        with:
-          version: 6.0.2
-
-      - name: Build
-        run: |
-          cd vben28
-          pnpm install
-          npm run build
 
       - name: Setting Version
         id: vars

@@ -106,6 +106,8 @@ markdown_extensions:
       emoji_generator: !!python/name:materialx.emoji.to_svg
   - md_in_html
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 
 nav:
   - Home: index.md
@@ -141,12 +143,9 @@ nav:
   # - 扩展:
   #     - 统一返回值格式: user-guide/zh/extension/统一返回值格式.md
   #     - Magicodes.IE: user-guide/zh/extension/MagicodesIE.md
-  - 常见问题:
-      - 编译: user-guide/zh/problem/problem.md
-      - EFCore: user-guide/zh/problem/ef.md
   - 部署:
       - Docker: user-guide/zh/deploy/docker.md
-      - Github自动化部署: user-guide/zh/deploy/github.md
+      # - Github自动化部署: user-guide/zh/deploy/github.md
   - 常见问题:
       - 编译: user-guide/zh/problem/problem.md
       - EFCore: user-guide/zh/problem/ef.md
