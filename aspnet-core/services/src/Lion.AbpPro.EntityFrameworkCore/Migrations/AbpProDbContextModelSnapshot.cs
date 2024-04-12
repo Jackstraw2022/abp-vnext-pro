@@ -290,6 +290,10 @@ namespace Lion.AbpPro.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("TenantId");
+
                     b.Property<string>("UiCultureName")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -298,8 +302,7 @@ namespace Lion.AbpPro.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CultureName")
-                        .IsUnique();
+                    b.HasIndex("CultureName");
 
                     b.ToTable("AbpLanguages", (string)null);
                 });
@@ -365,6 +368,10 @@ namespace Lion.AbpPro.Migrations
                     b.Property<Guid>("SenderId")
                         .HasColumnType("char(36)");
 
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("TenantId");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -421,6 +428,10 @@ namespace Lion.AbpPro.Migrations
 
                     b.Property<Guid>("ReceiveId")
                         .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("TenantId");
 
                     b.HasKey("Id");
 
@@ -1668,8 +1679,8 @@ namespace Lion.AbpPro.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<string>("DefaultValue")
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(512)
@@ -1699,8 +1710,8 @@ namespace Lion.AbpPro.Migrations
                         .HasColumnType("varchar(128)");
 
                     b.Property<string>("Providers")
-                        .HasMaxLength(128)
-                        .HasColumnType("varchar(128)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)");
 
                     b.HasKey("Id");
 

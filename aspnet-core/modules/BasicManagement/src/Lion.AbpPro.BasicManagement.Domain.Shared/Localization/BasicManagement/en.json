@@ -15,10 +15,13 @@
     "Permission:SettingManagement": "SettingManagement",
     "Permission:IdentitySecurityLog": "IdentitySecurityLog",
     "Permission:OrganizationUnitManagement": "OrganizationUnitManagement",
+    "Permission:FeatureManagement": "FeatureManagement",
     "Setting.Group.System": "System",
     "Lion.AbpPro.BasicManagement:100001": "OrganizationUnit Not Exist",
     "Lion.AbpPro.BasicManagement:100002": "UserLockedOut",
     "Lion.AbpPro.BasicManagement:100003": "UserOrPasswordMismatch",
-    "Lion.AbpPro.BasicManagement:100004": "UserDisabled"
+    "Lion.AbpPro.BasicManagement:100004": "UserDisabled",
+    "Lion.AbpPro.BasicManagement:100005": "Tenant Not Exist",
+    "Lion.AbpPro.BasicManagement:100006": "Not Support Set ConnectionString"
   }
 }
