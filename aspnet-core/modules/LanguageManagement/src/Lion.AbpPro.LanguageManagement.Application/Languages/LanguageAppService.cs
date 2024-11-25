@@ -22,7 +22,7 @@ public class LanguageAppService : ApplicationService, ILanguageAppService
     {
         var languages = await _languageManager.ListAsync();
         var list = ObjectMapper.Map<List<Language>, List<PageLanguageOutput>>(languages);
-        return list;
+        return list.ToList();
     }
 
 
