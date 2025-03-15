@@ -15,7 +15,7 @@ namespace Lion.AbpPro.BasicManagement.Systems
 
         [HttpPost("page")]
         [SwaggerOperation(summary: "分页获取用户信息", Tags = new[] { "Users" })]
-        public Task<PagedResultDto<IdentityUserDto>> ListAsync(PagingUserListInput input)
+        public Task<PagedResultDto<PageIdentityUserOutput>> ListAsync(PagingUserListInput input)
         {
             return _userAppService.ListAsync(input);
         }
@@ -83,6 +83,13 @@ namespace Lion.AbpPro.BasicManagement.Systems
         public Task<IdentityUserDto> FindByUserNameAsync(FindByUserNameInput input)
         {
             return _userAppService.FindByUserNameAsync(input);
+        }
+
+        [HttpPost("myProfile")]
+        [SwaggerOperation(summary: "获取个人信息", Tags = new[] { "Users" })]
+        public Task<MyProfileOutput> MyProfileAsync()
+        {
+            return _userAppService.MyProfileAsync();
         }
     }
 }

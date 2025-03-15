@@ -42,7 +42,7 @@ public static class CommandOptions
     /// <summary>
     /// 输出目录
     /// </summary>
-    public static class OutputFolder
+    public static class Output
     {
         public const string Short = "o";
         public const string Long = "output";
@@ -64,5 +64,59 @@ public static class CommandOptions
     {
         public const string Short = "v";
         public const string Long = "version";
+    }
+    
+    /// <summary>
+    /// Token
+    /// </summary>
+    public static class Token
+    {
+        public const string Short = "token";
+        public const string Long = "token";
+    }
+    
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public static class Sln
+    {
+        public const string Short = "sln";
+        public const string Long = "sln";
+    }
+    
+    /// <summary>
+    /// UserName
+    /// </summary>
+    public static class UserName
+    {
+        public const string Short = "u";
+        public const string Long = "UserName";
+    }
+    
+    /// <summary>
+    /// Password
+    /// </summary>
+    public static class Password
+    {
+        public const string Short = "p";
+        public const string Long = "Password";
+    }
+    
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public static class TenantName
+    {
+        public const string Short = "t";
+        public const string Long = "TenantName";
+    }
+    
+    /// <summary>
+    /// CodeServiceUrl
+    /// </summary>
+    public static class CodeServiceUrl
+    {
+        public const string Short = "c";
+        public const string Long = "CodeServiceUrl";
     }
 }

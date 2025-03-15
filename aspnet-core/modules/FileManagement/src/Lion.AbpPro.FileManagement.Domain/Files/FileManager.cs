@@ -1,33 +1,39 @@
-﻿namespace Lion.AbpPro.FileManagement.Files;
+namespace Lion.AbpPro.FileManagement.Files;
 
-public class FileManager : DomainService, IFileManager
+public class FileManager : DomainService
 {
-    private readonly IFileRepository _fileRepository;
+    private readonly IBlobContainer<AbpProFileManagementContainer> _blobContainer;
+    private readonly FileObjectManager _fileObjectManager;
 
-    public FileManager(IFileRepository fileRepository)
+    public FileManager(IBlobContainer<AbpProFileManagementContainer> blobContainer, FileObjectManager fileObjectManager)
     {
-        _fileRepository = fileRepository;
+        _blobContainer = blobContainer;
+        _fileObjectManager = fileObjectManager;
     }
 
-    public virtual async Task CreateAsync(string fileName, string filePath)
+    /// <summary>
+    /// 创建文件
+    /// </summary>
+    public virtual async Task<FileObjectDto> CreateAsync(
+        Guid id,
+        string fileName,
+        long fileSize,
+        string contentType,
+        byte[] content,
+        bool overwrite = false
+    )
     {
-        Check.NotNullOrWhiteSpace(fileName, nameof(fileName));
-        Check.NotNullOrWhiteSpace(filePath, nameof(filePath));
-        var entity = new File(GuidGenerator.Create(), CurrentTenant.Id, fileName, filePath);
-        await _fileRepository.InsertAsync(entity);
+        var entity = await _fileObjectManager.CreateAsync(id, fileName, fileSize, contentType, content, overwrite);
+        await _blobContainer.SaveAsync(id.ToString(), content, true);
+        return entity;
     }
 
-    public virtual async Task<List<File>> PagingAsync(
-        string filter = null,
-        int maxResultCount = 10,
-        int skipCount = 0)
+    /// <summary>
+    /// 删除文件
+    /// </summary>
+    public virtual async Task DeleteAsync(Guid id)
     {
-        return await _fileRepository.GetPagingListAsync(filter, maxResultCount, skipCount);
-    }
-
-
-    public virtual async Task<long> CountAsync(string filter = null)
-    {
-        return await _fileRepository.GetPagingCountAsync(filter);
+        await _fileObjectManager.DeleteAsync(id);
+        await _blobContainer.DeleteAsync(id.ToString());
     }
 }

@@ -1,59 +1,64 @@
-﻿namespace Lion.AbpPro.FileManagement.Files;
+namespace Lion.AbpPro.FileManagement.Files;
 
+/// <summary>
+/// 文件
+/// </summary>
 [Authorize(FileManagementPermissions.FileManagement.Default)]
-public class FileAppService : FileManagementAppService, IFileAppService
+public class FileAppService : ApplicationService, IFileAppService
 {
-    private readonly IFileManager _fileManager;
-    private readonly IConfiguration _configuration;
+    private readonly FileObjectManager _fileObjectManager;
+    private readonly FileManager _fileManager;
+    private readonly IBlobContainer<AbpProFileManagementContainer> _blobContainer;
 
-    public FileAppService(IFileManager fileManager, IConfiguration configuration)
+    public FileAppService(FileObjectManager fileObjectManager, IBlobContainer<AbpProFileManagementContainer> blobContainer, FileManager fileManager)
     {
+        _fileObjectManager = fileObjectManager;
+        _blobContainer = blobContainer;
         _fileManager = fileManager;
-        _configuration = configuration;
     }
-    
-    public virtual async Task<FileTokenOutput> GetFileTokenAsync()
-    {
-        // 如何设置 sts https://help.aliyun.com/document_detail/100624.html
-        var regionId = _configuration.GetValue<string>("AliYun:OSS:RegionId");
-        var accessKeyId = _configuration.GetValue<string>("AliYun:OSS:AccessKeyId");
-        var accessKeySecret = _configuration.GetValue<string>("AliYun:OSS:AccessKeySecret");
-        var profile = DefaultProfile.GetProfile(regionId, accessKeyId, accessKeySecret);
-        var client = new DefaultAcsClient(profile);
-        var request = new AssumeRoleRequest()
-        {
-            RoleArn = _configuration.GetValue<string>("AliYun:OSS:RoleArn"),
-            RoleSessionName = "Lion.AbpPro"
-        };
-        var response = client.GetAcsResponse(request);
 
-        var result = new FileTokenOutput()
-        {
-            AccessKeyId = response.Credentials.AccessKeyId,
-            AccessKeySecret = response.Credentials.AccessKeySecret,
-            Token = response.Credentials.SecurityToken,
-            Expiration = response.Credentials.Expiration,
-            Region = _configuration.GetValue<string>("AliYun:OSS:RegionId"),
-            Bucket = _configuration.GetValue<string>("AliYun:OSS:ContainerName"),
-        };
-        return await Task.FromResult(result);
+    /// <summary>
+    /// 分页查询文件
+    /// </summary>      
+    public async Task<PagedResultDto<PageFileObjectOutput>> PageAsync(PageFileObjectInput input)
+    {
+        var result = new PagedResultDto<PageFileObjectOutput>();
+        var totalCount = await _fileObjectManager.GetCountAsync(input.FileName, input.StartCreationTime, input.EndCreationTime);
+        result.TotalCount = totalCount;
+        if (totalCount <= 0) return result;
+        var list = await _fileObjectManager.GetListAsync(input.FileName, input.StartCreationTime, input.EndCreationTime, input.PageSize, input.SkipCount);
+        result.Items = ObjectMapper.Map<List<FileObjectDto>, List<PageFileObjectOutput>>(list);
+        return result;
     }
 
     [Authorize(FileManagementPermissions.FileManagement.Upload)]
-    public virtual async Task CreateAsync(CreateFileInput input)
+    public async Task UploadAsync(List<IFormFile> files)
     {
-        await _fileManager.CreateAsync(input.FileName, input.FilePath);
+        foreach (var formFile in files)
+        {
+            // 获取文件的二进制数据
+            using var memoryStream = new MemoryStream();
+            await formFile.CopyToAsync(memoryStream);
+            var fileBytes = memoryStream.ToArray();
+            await _fileManager.CreateAsync(GuidGenerator.Create(), formFile.FileName, formFile.Length, formFile.ContentType, fileBytes, true);
+        }
     }
 
-    public virtual async Task<PagedResultDto<PagingFileOutput>> PagingAsync(PagingFileInput input)
+
+    /// <summary>
+    /// 删除文件
+    /// </summary>
+    [Authorize(FileManagementPermissions.FileManagement.Delete)]
+    public Task DeleteAsync(DeleteFileObjectInput input)
     {
-        var result = new PagedResultDto<PagingFileOutput>();
-        var totalCount = await _fileManager.CountAsync(input.Filter);
-        result.TotalCount = totalCount;
-        if (totalCount <= 0) return result;
-        var entities = await _fileManager.PagingAsync(input.Filter, input.PageSize,
-            input.SkipCount);
-        result.Items = ObjectMapper.Map<List<File>, List<PagingFileOutput>>(entities);
-        return result;
+        return _fileManager.DeleteAsync(input.Id);
+    }
+
+    [Authorize(FileManagementPermissions.FileManagement.Download)]
+    public async Task<RemoteStreamContent> DownloadAsync(DownloadFileObjectInput input)
+    {
+        var fileObject = await _fileObjectManager.GetAsync(input.Id);
+        var file = await _blobContainer.GetAsync(input.Id.ToString());
+        return new RemoteStreamContent(file, fileObject.FileName, fileObject.ContentType);
     }
 }

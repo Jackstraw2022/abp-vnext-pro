@@ -19,7 +19,7 @@ namespace Lion.AbpPro.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("_Abp_DatabaseProvider", EfCoreDatabaseProvider.MySql)
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -139,6 +139,80 @@ namespace Lion.AbpPro.Migrations
                     b.HasIndex("DataDictionaryId");
 
                     b.ToTable("AbpDataDictionaryDetails", (string)null);
+                });
+
+            modelBuilder.Entity("Lion.AbpPro.FileManagement.Files.FileObject", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasComment("文件名称");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)")
+                        .HasComment("文件名称");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint")
+                        .HasComment("文件大小");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileName");
+
+                    b.ToTable("AbpFileObjects", (string)null);
                 });
 
             modelBuilder.Entity("Lion.AbpPro.LanguageManagement.LanguageTexts.Aggregates.LanguageText", b =>
@@ -927,6 +1001,10 @@ namespace Lion.AbpPro.Migrations
                         .HasColumnType("varchar(40)")
                         .HasColumnName("ConcurrencyStamp");
 
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreationTime");
+
                     b.Property<string>("Description")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
@@ -999,6 +1077,10 @@ namespace Lion.AbpPro.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("varchar(40)")
                         .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("CreationTime");
 
                     b.Property<int>("EntityVersion")
                         .HasColumnType("int");
@@ -1163,9 +1245,13 @@ namespace Lion.AbpPro.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
 
+                    b.Property<string>("ExtraProperties")
+                        .HasColumnType("longtext")
+                        .HasColumnName("ExtraProperties");
+
                     b.Property<string>("IpAddresses")
-                        .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
 
                     b.Property<DateTime?>("LastAccessed")
                         .HasColumnType("datetime(6)");

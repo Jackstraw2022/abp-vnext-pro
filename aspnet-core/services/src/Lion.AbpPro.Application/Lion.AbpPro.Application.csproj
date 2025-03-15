@@ -2,13 +2,14 @@
     
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <RootNamespace>Lion.AbpPro</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\modules\BasicManagement\src\Lion.AbpPro.BasicManagement.Application\Lion.AbpPro.BasicManagement.Application.csproj" />
         <ProjectReference Include="..\..\..\modules\DataDictionaryManagement\src\Lion.AbpPro.DataDictionaryManagement.Application\Lion.AbpPro.DataDictionaryManagement.Application.csproj" />
+        <ProjectReference Include="..\..\..\modules\FileManagement\src\Lion.AbpPro.FileManagement.Application\Lion.AbpPro.FileManagement.Application.csproj" />
         <ProjectReference Include="..\..\..\modules\NotificationManagement\src\Lion.AbpPro.NotificationManagement.Application\Lion.AbpPro.NotificationManagement.Application.csproj" />
         <ProjectReference Include="..\..\..\modules\LanguageManagement\src\Lion.AbpPro.LanguageManagement.Application\Lion.AbpPro.LanguageManagement.Application.csproj" />
         <ProjectReference Include="..\Lion.AbpPro.Domain\Lion.AbpPro.Domain.csproj" />

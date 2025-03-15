@@ -1,5 +1,8 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.Redis;
+using Volo.Abp.BlobStoring;
+using Volo.Abp.BlobStoring.FileSystem;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Lion.AbpPro;
 
@@ -285,6 +288,23 @@ public partial class AbpProHttpApiHostModule
         {
             var connection = ConnectionMultiplexer.Connect(connectionString);
             return new RedisDistributedSynchronizationProvider(connection.GetDatabase());
+        });
+    }
+
+    /// <summary>
+    /// 配置blob设置
+    /// </summary>
+    private void ConfigureBlobStorage()
+    {
+        Configure<AbpBlobStoringOptions>(options =>
+        {
+            options.Containers.ConfigureDefault(container =>
+            {
+                container.UseFileSystem(fileSystem =>
+                {
+                    fileSystem.BasePath = "C:\\my-files";
+                });
+            });
         });
     }
 }

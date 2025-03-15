@@ -1,4 +1,6 @@
-﻿namespace Lion.AbpPro.Cli.Commands;
+﻿using DirectoryHelper = Lion.AbpPro.Cli.Utils.DirectoryHelper;
+
+namespace Lion.AbpPro.Cli.Commands;
 
 public class NewCommand : IConsoleCommand, ITransientDependency
 {
@@ -7,176 +9,154 @@ public class NewCommand : IConsoleCommand, ITransientDependency
     private readonly AbpCliOptions _abpCliOptions;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly Options.AbpProCliOptions _cliOptions;
-    private readonly ISourceCodeManager _sourceCodeManager;
+    private readonly IGithubClient _githubClient;
 
     public NewCommand(
         IOptions<AbpCliOptions> abpCliOptions,
         ILogger<NewCommand> logger,
         IServiceScopeFactory serviceScopeFactory,
         IOptions<Options.AbpProCliOptions> options,
-        ISourceCodeManager sourceCodeManager)
+        IGithubClient githubClient)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
-        _sourceCodeManager = sourceCodeManager;
+        _githubClient = githubClient;
         _cliOptions = options.Value;
         _abpCliOptions = abpCliOptions.Value;
     }
 
     public async Task ExecuteAsync(CommandLineArgs commandLineArgs)
     {
-        #region 参数获取
+        _logger.LogInformation($"开始创建模板......");
 
-        var context = new SourceCodeContext();
+        #region 参数判断
+
         // 检查模板是否正确
         var template = commandLineArgs.Options.GetOrNull(CommandOptions.Template.Short, CommandOptions.Template.Long);
+        var allTemplates = _cliOptions.Templates.Select(e => e.Key).JoinAsString("|");
         if (template.IsNullOrWhiteSpace())
         {
-            _logger.LogError("请输入模板名称");
+            _logger.LogError($"请输入模板名称,lion.abp create -t 模板名称({allTemplates})");
             GetUsageInfo();
             return;
         }
 
-        var templateOptions = _cliOptions.Templates.FirstOrDefault(e => e.Name == template);
+        var templateOptions = _cliOptions.Templates.FirstOrDefault(e => e.Key == template);
         if (templateOptions == null)
         {
-            _logger.LogError("模板类型不正确");
+            _logger.LogError($"模板类型不正确,lion.abp create -t 模板名称({allTemplates})");
             GetUsageInfo();
             return;
         }
-
-        context.RepositoryId = _cliOptions.RepositoryId;
-        context.Token = _cliOptions.DecryptToken;
-        context.Owner = _cliOptions.Owner;
-        context.TemplateName = templateOptions.Name;
-        context.TemplateKey = templateOptions.Key;
-        context.IsSource = templateOptions.IsSource;
-        context.ExcludeFiles = templateOptions.ExcludeFiles;
-        context.ReplaceSuffix = templateOptions.ReplaceSuffix;
-        context.OldCompanyName = templateOptions.OldCompanyName;
-        context.OldProjectName = templateOptions.OldProjectName;
-        context.OldModuleName = templateOptions.OldModuleName;
-        // if (commandLineArgs.Target.IsNullOrWhiteSpace())
-        // {
-        //     GetUsageInfo();
-        //     return;
-        // }
 
         //校验是否输入公司名称
-        context.CompanyName = commandLineArgs.Options.GetOrNull(CommandOptions.Company.Short, CommandOptions.Company.Long);
-        if (context.CompanyName.IsNullOrWhiteSpace())
+        var companyName = commandLineArgs.Options.GetOrNull(CommandOptions.Company.Short, CommandOptions.Company.Long);
+        if (companyName.IsNullOrWhiteSpace())
         {
-            _logger.LogError("请输入公司名称");
+            _logger.LogError("请输入公司名称lion.abp create -c 公司名称");
             GetUsageInfo();
             return;
         }
 
         //校验是否输入项目名称
-        context.ProjectName = commandLineArgs.Options.GetOrNull(CommandOptions.Project.Short, CommandOptions.Project.Long);
-        if (context.ProjectName.IsNullOrWhiteSpace())
+        var projectName = commandLineArgs.Options.GetOrNull(CommandOptions.Project.Short, CommandOptions.Project.Long);
+        if (projectName.IsNullOrWhiteSpace())
         {
-            _logger.LogError("请输入项目名称");
+            _logger.LogError("请输入公司名称lion.abp create -p 项目名称");
             GetUsageInfo();
             return;
         }
 
-        //校验是否输入项目名称
-        context.ModuleName = commandLineArgs.Options.GetOrNull(CommandOptions.Module.Short, CommandOptions.Module.Long);
-        if (context.TemplateKey == "abp-vnext-pro-nuget-module" && context.ModuleName.IsNullOrWhiteSpace())
+        //校验是否输入模块名称
+        var moduleName = commandLineArgs.Options.GetOrNull(CommandOptions.Module.Short, CommandOptions.Module.Long);
+        if (templateOptions.Key == "pro-module" && moduleName.IsNullOrWhiteSpace())
         {
-            _logger.LogError("请输入模块名称");
+            _logger.LogError("请输入公司名称lion.abp create -m 模块名称");
             GetUsageInfo();
             return;
         }
 
-        var outputFolder = commandLineArgs.Options.GetOrNull(CommandOptions.OutputFolder.Short, CommandOptions.OutputFolder.Long);
+        var version = commandLineArgs.Options.GetOrNull(CommandOptions.Version.Short, CommandOptions.Version.Long);
+        var output = commandLineArgs.Options.GetOrNull(CommandOptions.Output.Short, CommandOptions.Output.Long);
 
-        outputFolder = outputFolder != null ? Path.GetFullPath(outputFolder) : Directory.GetCurrentDirectory();
+        #endregion
 
-        context.OutputFolder = outputFolder;
-
-        if (_cliOptions.Templates.FirstOrDefault(e => e.Name == template) != null && template =="local")
+        // 获取release信息
+        Release release = null;
+        if (version.IsNullOrWhiteSpace())
         {
-            var source = commandLineArgs.Options.GetOrNull(CommandOptions.Source.Short, CommandOptions.Source.Long);
-            context.TemplateFolder = source;
-            if (context.TemplateFolder.IsNullOrWhiteSpace())
-            {
-                Console.WriteLine("请输入源码地址");
-                Console.WriteLine("示例: lion.abp new -t local -c 公司名称 -p 项目名称 -s C:\\Users\\Code -o C:\\Users\\output");
-                return;
-            }
-            
-            if (context.OutputFolder.IsNullOrWhiteSpace())
-            {
-                Console.WriteLine("请输入输出地址");
-                Console.WriteLine("示例: lion.abp new -t local -c 公司名称 -p 项目名称 -s C:\\Users\\Code -o C:\\Users\\output");
-                return;
-            }
-            
-            _sourceCodeManager.ReplaceLocalTemplates(context);
-            
-            
+            release = await _githubClient.GetLatestVersionAsync(_cliOptions.Owner, _cliOptions.RepositoryId, _cliOptions.DecryptToken);
+            version = release.TagName;
         }
         else
         {
-            //版本
-            var version = commandLineArgs.Options.GetOrNull(CommandOptions.Version.Short, CommandOptions.Version.Long);
-
-            #endregion
-
-            // 获取源码
-            context.TemplateFile = await _sourceCodeManager.GetAsync(version);
-
-            // 解压
-            _sourceCodeManager.ExtractProjectZip(context);
-
-            // 替换模板
-            _sourceCodeManager.ReplaceTemplates(context);
+            release = await _githubClient.CheckVersionAsync(_cliOptions.Owner, _cliOptions.RepositoryId, _cliOptions.DecryptToken, version);
         }
 
+        // 下载源码
+        var localFilePath = Path.Combine(CliPaths.Source, $"{_cliOptions.RepositoryId}-{release.TagName}.zip");
 
-        // 打开文件夹
-        Process.Start("explorer.exe", context.OutputFolder);
+        if (!Directory.Exists(CliPaths.Source))
+        {
+            Directory.CreateDirectory(CliPaths.Source);
+        }
+
+        if (!File.Exists(localFilePath))
+        {
+            _logger.LogInformation("正在从github下载源码......");
+            await _githubClient.DownloadAsync(_cliOptions.Owner, _cliOptions.RepositoryId, version, localFilePath);
+            _logger.LogInformation("github源码下载完成.");
+        }
+
+        // 解压源码
+        var extractPath = ZipHelper.Extract(localFilePath, _cliOptions.RepositoryId, version);
+
+        var contentPath = templateOptions.Name == "pro" ? extractPath : Path.Combine(extractPath, "templates", templateOptions.Name);
+        if (output.IsNullOrWhiteSpace())
+        {
+            // 复制源码到输出目录
+            output = Path.Combine(CliPaths.Output, $"{companyName}{projectName}{version}");
+
+            if (templateOptions.Key == "pro-module")
+            {
+                output = Path.Combine(CliPaths.Output, $"{companyName}-{projectName}-{moduleName}-{version}");
+            }
+        }
+        else
+        {
+            output = Path.Combine(output, $"{companyName}{projectName}{moduleName}{version}");
+        }
+        
+
+        DirectoryHelper.CopyFolder(contentPath, output, templateOptions.ExcludeFiles);
+
+        ReplaceHelper.ReplaceTemplates(
+            output,
+            templateOptions.OldCompanyName,
+            templateOptions.OldProjectName,
+            templateOptions.OldModuleName,
+            companyName,
+            projectName,
+            moduleName,
+            templateOptions.ReplaceSuffix,
+            version);
+
+        _logger.LogInformation($"创建模板成功,请查阅----->: {output}");
+
+        ProcessHelper.OpenExplorer(output);
     }
 
     public void GetUsageInfo()
     {
         var sb = new StringBuilder();
-
-        sb.AppendLine("查看命令帮助:");
-        sb.AppendLine("    lion.abp help");
-        sb.AppendLine("命令列表:");
-
-        foreach (var command in _abpCliOptions.Commands.ToArray())
-        {
-            string shortDescription;
-
-            using (var scope = _serviceScopeFactory.CreateScope())
-            {
-                shortDescription = ((IConsoleCommand)scope.ServiceProvider
-                    .GetRequiredService(command.Value)).GetShortDescription();
-            }
-
-            sb.Append("    > ");
-            sb.Append(command.Key);
-            sb.Append(string.IsNullOrWhiteSpace(shortDescription) ? "" : ":");
-            sb.Append(" ");
-            sb.AppendLine(shortDescription);
-        }
-
+        sb.AppendLine("");
+        sb.AppendLine("Usage:");
+        sb.AppendLine("lion.abp new -t 模板名称 -c 公司名称 -p 项目名称 -m 模块名称(创建模块才需要此参数)");
         _logger.LogInformation(sb.ToString());
     }
 
     public string GetShortDescription()
     {
-        var message = Environment.NewLine;
-        message += $"           > lion.abp new -t pro -c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录";
-        message += Environment.NewLine;
-        message += $"           > lion.abp new -t pro.all -c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录";
-        // message += Environment.NewLine;
-        // message += $"           > lion.abp new -t pro.simplify -c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录";
-        message += Environment.NewLine;
-        message += $"           > lion.abp new -t pro.module-c 公司名称 -p 项目名称 -v 版本(默认LastRelease) -o 默认当前控制台执行目录";
-        return message;
+        return "创建开源版本项目:lion.abp new -t 模板名称 -c 公司名称 -p 项目名称 -m 模块名称(创建模块才需要此参数)";
     }
 }

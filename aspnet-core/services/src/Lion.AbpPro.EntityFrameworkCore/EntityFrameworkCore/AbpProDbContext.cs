@@ -1,26 +1,19 @@
 using Lion.AbpPro.DataDictionaryManagement.DataDictionaries.Aggregates;
+using Lion.AbpPro.FileManagement.EntityFrameworkCore;
+using Lion.AbpPro.FileManagement.Files;
 using Lion.AbpPro.LanguageManagement.EntityFrameworkCore;
 using Lion.AbpPro.LanguageManagement.Languages.Aggregates;
 using Lion.AbpPro.LanguageManagement.LanguageTexts.Aggregates;
 using Lion.AbpPro.NotificationManagement.Notifications.Aggregates;
-
 namespace Lion.AbpPro.EntityFrameworkCore
 {
-    /* This is your actual DbContext used on runtime.
-     * It includes only your entities.
-     * It does not include entities of the used modules, because each module has already
-     * its own DbContext class. If you want to share some database tables with the used modules,
-     * just create a structure like done for AppUser.
-     *
-     * Don't use this DbContext for database migrations since it does not contain tables of the
-     * used modules (as explained above). See AbpProMigrationsDbContext for migrations.
-     */
     [ConnectionStringName("Default")]
     public class AbpProDbContext : AbpDbContext<AbpProDbContext>, IAbpProDbContext,
         IBasicManagementDbContext,
         INotificationManagementDbContext,
         IDataDictionaryManagementDbContext,
-        ILanguageManagementDbContext
+        ILanguageManagementDbContext,
+        IFileManagementDbContext
     {
         public DbSet<IdentityUser> Users { get; set; }
         public DbSet<IdentityRole> Roles { get; set; }
@@ -47,6 +40,7 @@ namespace Lion.AbpPro.EntityFrameworkCore
         public DbSet<DataDictionary> DataDictionaries { get;  set; }
         public DbSet<Language> Languages { get; set; }
         public DbSet<LanguageText> LanguageTexts { get; set; }
+        public DbSet<FileObject> FileObjects { get; set; }
         
         public AbpProDbContext(DbContextOptions<AbpProDbContext> options)
             : base(options)
@@ -80,7 +74,9 @@ namespace Lion.AbpPro.EntityFrameworkCore
             
             // 多语言
             builder.ConfigureLanguageManagement();
-        }
 
+            // 文件模块
+            builder.ConfigureFileManagement();
+        }
     }
 }

@@ -1,3 +1,4 @@
+using Volo.Abp.BlobStoring.FileSystem;
 using Volo.Abp.DistributedLocking;
 
 namespace Lion.AbpPro
@@ -15,7 +16,8 @@ namespace Lion.AbpPro
         typeof(AbpProCapEntityFrameworkCoreModule),
         typeof(AbpAspNetCoreMvcUiBasicThemeModule),
         typeof(AbpCachingStackExchangeRedisModule),
-        typeof(AbpDistributedLockingModule)
+        typeof(AbpDistributedLockingModule),
+        typeof(AbpBlobStoringFileSystemModule)
         //typeof(AbpBackgroundJobsHangfireModule)
     )]
     public partial class AbpProHttpApiHostModule : AbpModule
@@ -41,6 +43,7 @@ namespace Lion.AbpPro
             ConfigureAuditLog(context);
             ConfigurationSignalR(context);
             ConfigurationMultiTenancy();
+            ConfigureBlobStorage();
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -49,7 +52,7 @@ namespace Lion.AbpPro
             var configuration = context.GetConfiguration();
             app.UseAbpProRequestLocalization();
             app.UseCorrelationId();
-            app.UseStaticFiles();
+            app.MapAbpStaticAssets();
             if (configuration.GetValue("MiniProfiler:Enabled", false))
             {
                 app.UseMiniProfiler();
@@ -76,13 +79,19 @@ namespace Lion.AbpPro
             app.UseAuditing();
             app.UseAbpSerilogEnrichers();
             app.UseUnitOfWork();
-            app.UseConfiguredEndpoints(endpoints => { endpoints.MapHealthChecks("/health"); });
-            // app.UseHangfireDashboard("/hangfire", new DashboardOptions()
-            // {
-            //     Authorization = new[] { new CustomHangfireAuthorizeFilter() },
-            //     IgnoreAntiforgeryToken = true
-            // });
+            
+            app.UseConfiguredEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health"); 
+                
+                // endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions()
+                // {
+                //     Authorization = new[] { new CustomHangfireAuthorizeFilter() },
+                //     IgnoreAntiforgeryToken = true
+                // });
 
+            });
+       
             if (configuration.GetValue("Consul:Enabled", false))
             {
                 app.UseConsul();

@@ -10,7 +10,7 @@ namespace Lion.AbpPro.BasicManagement.Users
         /// <summary>
         /// 分页查询用户
         /// </summary>
-        Task<PagedResultDto<IdentityUserDto>> ListAsync(PagingUserListInput input);
+        Task<PagedResultDto<PageIdentityUserOutput>> ListAsync(PagingUserListInput input);
 
         /// <summary>
         /// 分页查询用户
@@ -57,5 +57,10 @@ namespace Lion.AbpPro.BasicManagement.Users
         /// 通过username获取用户信息
         /// </summary>
         Task<IdentityUserDto> FindByUserNameAsync(FindByUserNameInput input);
+
+        /// <summary>
+        /// 获取个人信息
+        /// </summary>
+        Task<MyProfileOutput> MyProfileAsync();
     }
 }

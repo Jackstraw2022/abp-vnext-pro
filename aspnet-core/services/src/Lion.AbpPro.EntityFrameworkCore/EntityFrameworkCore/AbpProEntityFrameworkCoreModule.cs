@@ -1,3 +1,4 @@
+using Lion.AbpPro.FileManagement.EntityFrameworkCore;
 using Lion.AbpPro.LanguageManagement.EntityFrameworkCore;
 using Volo.Abp.Guids;
 
@@ -9,7 +10,8 @@ namespace Lion.AbpPro.EntityFrameworkCore
         typeof(AbpEntityFrameworkCoreMySQLModule),
         typeof(DataDictionaryManagementEntityFrameworkCoreModule),
         typeof(NotificationManagementEntityFrameworkCoreModule),
-        typeof(LanguageManagementEntityFrameworkCoreModule)
+        typeof(LanguageManagementEntityFrameworkCoreModule),
+        typeof(FileManagementEntityFrameworkCoreModule)
         )]
     public class AbpProEntityFrameworkCoreModule : AbpModule
     {
@@ -30,8 +32,13 @@ namespace Lion.AbpPro.EntityFrameworkCore
             Configure<AbpDbContextOptions>(options =>
             {
                 /* The main point to change your DBMS.
-                 * See also AbpProMigrationsDbContextFactory for EF Core tooling. */
-                options.UseMySQL();
+                 * See also HayoonKoreaDbContextFactory for EF Core tooling.
+                 *  https://github.com/abpframework/abp/issues/21879
+                 * */
+                options.UseMySQL(builder =>
+                {
+                    builder.TranslateParameterizedCollectionsToConstants();
+                });
             });
         }
     }
