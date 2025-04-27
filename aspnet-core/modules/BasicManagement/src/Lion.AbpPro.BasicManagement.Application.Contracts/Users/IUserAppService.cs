@@ -49,6 +49,11 @@ namespace Lion.AbpPro.BasicManagement.Users
         Task<bool> ChangePasswordAsync(ChangePasswordInput input);
 
         /// <summary>
+        /// 重置密码
+        /// </summary>
+        Task<bool> RestPasswordAsync(ResetPasswordInput input);
+        
+        /// <summary>
         /// 锁定用户
         /// </summary>
         Task LockAsync(LockUserInput input);
@@ -62,5 +67,10 @@ namespace Lion.AbpPro.BasicManagement.Users
         /// 获取个人信息
         /// </summary>
         Task<MyProfileOutput> MyProfileAsync();
+
+        /// <summary>
+        /// 是否需要修改密码
+        /// </summary>
+        Task<NeedChangePasswordOutput> NeedChangePasswordAsync();
     }
 }

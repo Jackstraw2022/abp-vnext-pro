@@ -1,3 +1,4 @@
+using Lion.AbpPro.Starter;
 using Volo.Abp.BlobStoring.FileSystem;
 using Volo.Abp.DistributedLocking;
 
@@ -12,12 +13,13 @@ namespace Lion.AbpPro
         typeof(AbpAspNetCoreSerilogModule),
         typeof(AbpAccountWebModule),
         typeof(AbpProApplicationModule),
-        typeof(AbpProCapModule),
-        typeof(AbpProCapEntityFrameworkCoreModule),
+        // typeof(AbpProCapModule),
+        // typeof(AbpProCapEntityFrameworkCoreModule),
         typeof(AbpAspNetCoreMvcUiBasicThemeModule),
         typeof(AbpCachingStackExchangeRedisModule),
         typeof(AbpDistributedLockingModule),
-        typeof(AbpBlobStoringFileSystemModule)
+        typeof(AbpBlobStoringFileSystemModule),
+        typeof(AbpProStarterModule)
         //typeof(AbpBackgroundJobsHangfireModule)
     )]
     public partial class AbpProHttpApiHostModule : AbpModule
@@ -39,7 +41,7 @@ namespace Lion.AbpPro
             //ConfigureHangfire(context);
             ConfigureMiniProfiler(context);
             ConfigureIdentity(context);
-            ConfigureCap(context);
+            //ConfigureCap(context);
             ConfigureAuditLog(context);
             ConfigurationSignalR(context);
             ConfigurationMultiTenancy();

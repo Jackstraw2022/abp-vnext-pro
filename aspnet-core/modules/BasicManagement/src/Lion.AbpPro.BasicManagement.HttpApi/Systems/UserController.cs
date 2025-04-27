@@ -71,6 +71,13 @@ namespace Lion.AbpPro.BasicManagement.Systems
             return _userAppService.ChangePasswordAsync(input);
         }
 
+        [HttpPost("resetPassword")]
+        [SwaggerOperation(summary: "重置密码", Tags = new[] { "Users" })]
+        public Task<bool> RestPasswordAsync(ResetPasswordInput input)
+        {
+            return _userAppService.RestPasswordAsync(input);
+        }
+
         [HttpPost("lock")]
         [SwaggerOperation(summary: "锁定用户", Tags = new[] { "Users" })]
         public Task LockAsync(LockUserInput input)
@@ -90,6 +97,13 @@ namespace Lion.AbpPro.BasicManagement.Systems
         public Task<MyProfileOutput> MyProfileAsync()
         {
             return _userAppService.MyProfileAsync();
+        }
+
+        [HttpPost("needChangePassword")]
+        [SwaggerOperation(summary: "是否需要修改密码", Tags = new[] { "Users" })]
+        public Task<NeedChangePasswordOutput> NeedChangePasswordAsync()
+        {
+            return _userAppService.NeedChangePasswordAsync();
         }
     }
 }

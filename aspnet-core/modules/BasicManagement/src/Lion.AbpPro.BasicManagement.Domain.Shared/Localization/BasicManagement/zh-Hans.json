@@ -9,6 +9,7 @@
     "Permission:Delete": "删除",
     "Permission:Export": "导出",
     "Permission:Enable": "启用|禁用",
+    "Permission:ResetPassword": "重置密码",
     "Permission:AuditLogManagement": "审计日志",
     "Permission:SystemManagement": "系统管理",
     "Permission:HangfireManagement": "后台任务",
@@ -17,12 +18,23 @@
     "Permission:OrganizationUnitManagement": "组织结构管理",
     "Permission:FeatureManagement": "功能管理",
     "Setting.Group.System": "系统",
+    "EnableNewAccountRequiredChangePassword": "首次登录必须修改密码",
+    "Description:EnableNewAccountRequiredChangePassword": "首次登录必须修改密码",
+    "EnableExpireRequiredChangePassword": "定期修改密码",
+    "Description:EnableExpireRequiredChangePassword": "定期修改密码",
+    "PasswordExpireDay": "密码过期天数",
+    "Description:PasswordExpireDay": "密码过期天数",
+    "PasswordRemindDay": "密码过期提醒天数",
+    "Description:PasswordRemindDay": "密码过期提醒天数",
     "Lion.AbpPro.BasicManagement:100001": "组织机构不存在",
     "Lion.AbpPro.BasicManagement:100002": "用户被锁定",
     "Lion.AbpPro.BasicManagement:100003": "用户名或者密码错误",
     "Lion.AbpPro.BasicManagement:100004": "用户已禁用",
     "Lion.AbpPro.BasicManagement:100005": "租户不存在",
     "Lion.AbpPro.BasicManagement:100006": "当前模块不支持设置数据库连接字符串",
-    "Lion.AbpPro.BasicManagement:100007": "用户不存在"
+    "Lion.AbpPro.BasicManagement:100007": "用户不存在",
+    "Lion.AbpPro.BasicManagement:100008": "密码已过期,请联系管理员重置密码。",
+    "Lion.AbpPro.BasicManagement:200001": "新用户首次登录需要修改密码.",
+    "Lion.AbpPro.BasicManagement:200002": "您的密码即将过期,请修改密码."
   }
 }

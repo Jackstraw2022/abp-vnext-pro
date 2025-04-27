@@ -34,8 +34,6 @@
         <PackageReference Include="DotNetCore.CAP.MySql" />
         <PackageReference Include="DotNetCore.CAP.RabbitMQ" />
         <PackageReference Include="DotNetCore.CAP.Dashboard" />
-        <PackageReference Include="DotNetCore.CAP.InMemoryStorage" />
-        <PackageReference Include="Savorboard.CAP.InMemoryMessageQueue" />
         <PackageReference Include="MiniProfiler.AspNetCore.Mvc" />
         <PackageReference Include="MiniProfiler.EntityFrameworkCore" />
         <PackageReference Include="MiniProfiler.Shared" />
@@ -48,6 +46,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\frameworks\src\Lion.AbpPro.CAP.EntityFrameworkCore\Lion.AbpPro.CAP.EntityFrameworkCore.csproj" />
         <ProjectReference Include="..\..\..\frameworks\src\Lion.AbpPro.CAP\Lion.AbpPro.CAP.csproj" />
+        <ProjectReference Include="..\..\..\frameworks\src\Lion.AbpPro.Starter\Lion.AbpPro.Starter.csproj" />
         <ProjectReference Include="..\..\..\shared\Lion.AbpPro.Shared.Hosting.Microservices\Lion.AbpPro.Shared.Hosting.Microservices.csproj" />
         <ProjectReference Include="..\..\src\Lion.AbpPro.Application\Lion.AbpPro.Application.csproj" />
         <ProjectReference Include="..\..\src\Lion.AbpPro.EntityFrameworkCore\Lion.AbpPro.EntityFrameworkCore.csproj" />

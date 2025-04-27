@@ -1,12 +1,15 @@
+using System.Security.Claims;
 using Lion.AbpPro.BasicManagement.Users.Dtos;
 using Magicodes.ExporterAndImporter.Excel;
 using Magicodes.ExporterAndImporter.Excel.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
 using Volo.Abp.Account;
 using Volo.Abp.Auditing;
 using Volo.Abp.Uow;
 using IdentityRole = Volo.Abp.Identity.IdentityRole;
+using IdentityUser = Volo.Abp.Identity.IdentityUser;
 
 namespace Lion.AbpPro.BasicManagement.Users
 {
@@ -18,19 +21,21 @@ namespace Lion.AbpPro.BasicManagement.Users
         private readonly IIdentityUserRepository _identityUserRepository;
         private readonly IExcelExporter _excelExporter;
         private readonly IOptions<IdentityOptions> _options;
+        private readonly ISettingProvider _settingProvider;
 
         public UserAppService(
             IIdentityUserAppService identityUserAppService,
             IdentityUserManager userManager,
             IIdentityUserRepository userRepository,
             IExcelExporter excelExporter,
-            IOptions<IdentityOptions> options)
+            IOptions<IdentityOptions> options, ISettingProvider settingProvider)
         {
             _identityUserAppService = identityUserAppService;
             _userManager = userManager;
             _identityUserRepository = userRepository;
             _excelExporter = excelExporter;
             _options = options;
+            _settingProvider = settingProvider;
         }
 
         /// <summary>
@@ -64,12 +69,11 @@ namespace Lion.AbpPro.BasicManagement.Users
                 SkipCount = input.SkipCount,
                 Sorting = nameof(IHasModificationTime.LastModificationTime)
             };
-            
+
             var source = await _identityUserRepository
                 .GetListAsync(request.Sorting, request.MaxResultCount, request.SkipCount, request.Filter);
 
             return ObjectMapper.Map<List<Volo.Abp.Identity.IdentityUser>, List<IdentityUserDto>>(source);
-
         }
 
         /// <summary>
@@ -152,6 +156,47 @@ namespace Lion.AbpPro.BasicManagement.Users
                 result.CheckErrors();
             }
 
+            await UpdateChangePasswordTimeAsync(identityUser);
+            return result.Succeeded;
+        }
+
+        private async Task UpdateChangePasswordTimeAsync(IdentityUser identityUser)
+        {
+            var now = Clock.Now.ToString("u");
+            var firstChangePasswordTime = identityUser.GetFirstChangePasswordTime();
+            if (firstChangePasswordTime == null)
+            {
+                // 用户是否第一次修改密码
+                await _userManager.AddClaimAsync(identityUser, new Claim(BasicManagementConsts.FirstChangePasswordTime, now));
+                await _userManager.AddClaimAsync(identityUser, new Claim(BasicManagementConsts.LastChangePasswordTime, now));
+            }
+            else
+            {
+                // 更新最后一次登录时间
+                var lastChangePasswordTimeClaim = identityUser.Claims.FirstOrDefault(e => e.ClaimType == BasicManagementConsts.LastChangePasswordTime);
+                if (lastChangePasswordTimeClaim != null)
+                {
+                    await _userManager.ReplaceClaimAsync(identityUser, new Claim(lastChangePasswordTimeClaim.ClaimType, lastChangePasswordTimeClaim.ClaimValue), new Claim(BasicManagementConsts.LastChangePasswordTime, now));
+                }
+                else
+                {
+                    await _userManager.AddClaimAsync(identityUser, new Claim(BasicManagementConsts.LastChangePasswordTime, now));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重置
+        /// </summary>
+        [Authorize(BasicManagementPermissions.SystemManagement.ResetPassword)]
+        public virtual async Task<bool> RestPasswordAsync(ResetPasswordInput input)
+        {
+            await _options.SetAsync();
+            var identityUser = await _userManager.GetByIdAsync(input.UserId);
+            await _userManager.RemovePasswordAsync(identityUser);
+            var result = await _userManager.AddPasswordAsync(identityUser, input.Password);
+            result.CheckErrors();
+            await UpdateChangePasswordTimeAsync(identityUser);
             return result.Succeeded;
         }
 
@@ -167,7 +212,7 @@ namespace Lion.AbpPro.BasicManagement.Users
             identityUser.SetIsActive(input.Locked);
             await _userManager.UpdateAsync(identityUser);
         }
-        
+
         /// <summary>
         /// 通过username获取用户信息
         /// </summary>
@@ -178,6 +223,7 @@ namespace Lion.AbpPro.BasicManagement.Users
             {
                 throw new BusinessException(BasicManagementErrorCodes.UserNotExist);
             }
+
             return ObjectMapper.Map<Volo.Abp.Identity.IdentityUser, IdentityUserDto>(user);
         }
 
@@ -188,7 +234,54 @@ namespace Lion.AbpPro.BasicManagement.Users
             {
                 throw new BusinessException(BasicManagementErrorCodes.UserNotExist);
             }
+
             return ObjectMapper.Map<Volo.Abp.Identity.IdentityUser, MyProfileOutput>(user);
+        }
+
+        public virtual async Task<NeedChangePasswordOutput> NeedChangePasswordAsync()
+        {
+            var result = new NeedChangePasswordOutput();
+            // 获取首次修改密码设置
+            var value = await _settingProvider.GetOrNullAsync(BasicManagementConsts.EnableNewAccountRequiredChangePassword);
+            bool.TryParse(value, out var convertValue);
+            if (!convertValue) return result;
+            var user = await _userManager.FindByIdAsync(CurrentUser.GetId().ToString());
+            if (user == null)
+                return result;
+
+            var firstChangePasswordTime = user.GetFirstChangePasswordTime();
+            if (firstChangePasswordTime == null)
+            {
+                result.NeedChangePassword = true;
+                result.Message = L[BasicManagementErrorCodes.NewPasswordExpire];
+                return result;
+            }
+
+            // 获取定期修改密码设置
+            var expireValue = await _settingProvider.GetOrNullAsync(BasicManagementConsts.EnableExpireRequiredChangePassword);
+            bool.TryParse(expireValue, out var expire);
+
+            if (!expire) return result;
+            
+            var lastChangePasswordTime = user.GetLastChangePasswordTime();
+            if (!lastChangePasswordTime.HasValue) return result;
+            
+            // 获取过期天数
+            var expireDays = await _settingProvider.GetOrNullAsync(BasicManagementConsts.PasswordExpireDay);
+            int.TryParse(expireDays, out var expireDay);
+
+            // 获取过期提醒天数
+            var remindDays = await _settingProvider.GetOrNullAsync(BasicManagementConsts.PasswordRemindDay);
+            int.TryParse(remindDays, out var remindDay);
+            
+            // 提前7天提示用户需要修改密码
+            var day = expireDay - remindDay;
+            if (lastChangePasswordTime.Value > Clock.Now.AddDays(-day)) return result;
+            
+            result.NeedChangePassword = true;
+            result.Message = L[BasicManagementErrorCodes.OldPasswordExpire];
+            return result;
+
         }
     }
 }
