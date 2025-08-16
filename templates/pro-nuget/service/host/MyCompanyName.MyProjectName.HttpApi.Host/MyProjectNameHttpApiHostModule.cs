@@ -1,8 +1,10 @@
+using Lion.AbpPro.AspNetCore;
+
 namespace MyCompanyName.MyProjectName
 {
     [DependsOn(
         typeof(MyProjectNameHttpApiModule),
-        typeof(AbpProSharedHostingMicroserviceModule),
+        typeof(AbpProAspNetCoreModule),
         typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
         typeof(MyProjectNameEntityFrameworkCoreModule),
         typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
@@ -25,6 +27,24 @@ namespace MyCompanyName.MyProjectName
             ConfigureAuditLog(context);
             ConfigurationSignalR(context);
             ConfigurationMultiTenancy();
+            
+            
+            context.Services
+                .AddAbpProAuditLog()
+                .AddAbpProAuthentication()
+                .AddAbpProMultiTenancy()
+                .AddAbpProRedis()
+                .AddAbpProRedisDistributedLocking()
+                .AddAbpProMiniProfiler()
+                .AddAbpProCors()
+                .AddAbpProAntiForgery()
+                .AddAbpProIdentity()
+                .AddAbpProSignalR()
+                .AddAbpProHealthChecks()
+                .AddAbpProTenantResolvers()
+                .AddAbpProLocalization()
+                .AddAbpProExceptions()
+                .AddAbpProSwagger("AbpPro");
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -71,10 +91,6 @@ namespace MyCompanyName.MyProjectName
             });
 
 
-            if (configuration.GetValue("Consul:Enabled", false))
-            {
-                app.UseConsul();
-            }
         }
 
         private void ConfigurationSignalR(ServiceConfigurationContext context)

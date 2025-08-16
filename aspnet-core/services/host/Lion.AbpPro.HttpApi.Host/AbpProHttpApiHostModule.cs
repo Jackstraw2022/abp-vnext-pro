@@ -1,103 +1,74 @@
-using Lion.AbpPro.Starter;
-using Volo.Abp.BlobStoring.FileSystem;
-using Volo.Abp.DistributedLocking;
+namespace Lion.AbpPro;
 
-namespace Lion.AbpPro
+[DependsOn(
+    typeof(AbpProHttpApiModule),
+    typeof(AbpProAspNetCoreModule),
+    typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
+    typeof(AbpProEntityFrameworkCoreModule),
+    typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
+    typeof(AbpAspNetCoreSerilogModule),
+    typeof(AbpAccountWebModule),
+    typeof(AbpProApplicationModule),
+    // typeof(AbpProCapModule),
+    // typeof(AbpProCapEntityFrameworkCoreModule),
+    typeof(AbpAspNetCoreMvcUiBasicThemeModule),
+    typeof(AbpCachingStackExchangeRedisModule),
+    typeof(AbpDistributedLockingModule),
+    typeof(AbpBlobStoringFileSystemModule),
+    typeof(AbpProStarterModule),
+    typeof(AbpSwashbuckleModule)
+    //typeof(AbpBackgroundJobsHangfireModule)
+)]
+public partial class AbpProHttpApiHostModule : AbpModule
 {
-    [DependsOn(
-        typeof(AbpProHttpApiModule),
-        typeof(AbpProSharedHostingMicroserviceModule),
-        typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
-        typeof(AbpProEntityFrameworkCoreModule),
-        typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
-        typeof(AbpAspNetCoreSerilogModule),
-        typeof(AbpAccountWebModule),
-        typeof(AbpProApplicationModule),
-        // typeof(AbpProCapModule),
-        // typeof(AbpProCapEntityFrameworkCoreModule),
-        typeof(AbpAspNetCoreMvcUiBasicThemeModule),
-        typeof(AbpCachingStackExchangeRedisModule),
-        typeof(AbpDistributedLockingModule),
-        typeof(AbpBlobStoringFileSystemModule),
-        typeof(AbpProStarterModule)
-        //typeof(AbpBackgroundJobsHangfireModule)
-    )]
-    public partial class AbpProHttpApiHostModule : AbpModule
+    public override void ConfigureServices(ServiceConfigurationContext context)
     {
-        public override void OnPostApplicationInitialization(ApplicationInitializationContext context)
+        context.Services
+            .AddAbpProAuditLog()
+            .AddAbpProAuthentication()
+            .AddAbpProMultiTenancy()
+            .AddAbpProRedis()
+            .AddAbpProRedisDistributedLocking()
+            .AddAbpProMiniProfiler()
+            .AddAbpProCors()
+            .AddAbpProAntiForgery()
+            .AddAbpProIdentity()
+            .AddAbpProBlobStorage()
+            .AddAbpProSignalR()
+            .AddAbpProHealthChecks()
+            .AddAbpProTenantResolvers()
+            .AddAbpProLocalization()
+            .AddAbpProExceptions()
+            .AddAbpProSwagger("AbpPro");
+    }
+
+    public override void OnApplicationInitialization(ApplicationInitializationContext context)
+    {
+        var app = context.GetApplicationBuilder();
+        app.UseAbpProRequestLocalization();
+        app.UseCorrelationId();
+        app.MapAbpStaticAssets();
+        app.UseAbpProMiniProfiler();
+        app.UseRouting();
+        app.UseAbpProCors();
+        app.UseAuthentication();
+        app.UseAbpProMultiTenancy();
+        app.UseAuthorization();
+        app.UseAbpProSwaggerUI("/swagger/AbpPro/swagger.json","AbpPro");
+        app.UseAbpProAuditing();
+        app.UseAbpSerilogEnrichers();
+        app.UseUnitOfWork();
+        app.UseConfiguredEndpoints(endpoints =>
         {
-            // 应用程序初始化的时候注册hangfire
-            //context.CreateRecurringJob();
-            base.OnPostApplicationInitialization(context);
-        }
-
-        public override void ConfigureServices(ServiceConfigurationContext context)
-        {
-            var configuration = context.Services.GetConfiguration();
-            ConfigureCache(context);
-            ConfigurationDistributedLocking(context);
-            ConfigureSwaggerServices(context);
-            ConfigureJwtAuthentication(context, configuration);
-            //ConfigureHangfire(context);
-            ConfigureMiniProfiler(context);
-            ConfigureIdentity(context);
-            //ConfigureCap(context);
-            ConfigureAuditLog(context);
-            ConfigurationSignalR(context);
-            ConfigurationMultiTenancy();
-            ConfigureBlobStorage();
-        }
-
-        public override void OnApplicationInitialization(ApplicationInitializationContext context)
-        {
-            var app = context.GetApplicationBuilder();
-            var configuration = context.GetConfiguration();
-            app.UseAbpProRequestLocalization();
-            app.UseCorrelationId();
-            app.MapAbpStaticAssets();
-            if (configuration.GetValue("MiniProfiler:Enabled", false))
-            {
-                app.UseMiniProfiler();
-            }
-
-            app.UseRouting();
-            app.UseCors(AbpProHttpApiHostConst.DefaultCorsPolicyName);
-            app.UseAuthentication();
-
-            if (MultiTenancyConsts.IsEnabled)
-            {
-                app.UseMultiTenancy();
-            }
-
-            app.UseAuthorization();
-            app.UseSwagger();
-            app.UseAbpSwaggerUI(options =>
-            {
-                options.SwaggerEndpoint("/swagger/AbpPro/swagger.json", "AbpPro API");
-                options.DocExpansion(DocExpansion.None);
-                options.DefaultModelsExpandDepth(-1);
-            });
-
-            app.UseAuditing();
-            app.UseAbpSerilogEnrichers();
-            app.UseUnitOfWork();
-            
-            app.UseConfiguredEndpoints(endpoints =>
-            {
-                endpoints.MapHealthChecks("/health"); 
+            endpoints.MapHealthChecks("/health"); 
                 
-                // endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions()
-                // {
-                //     Authorization = new[] { new CustomHangfireAuthorizeFilter() },
-                //     IgnoreAntiforgeryToken = true
-                // });
+            // endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions()
+            // {
+            //     Authorization = new[] { new CustomHangfireAuthorizeFilter() },
+            //     IgnoreAntiforgeryToken = true
+            // });
 
-            });
-       
-            if (configuration.GetValue("Consul:Enabled", false))
-            {
-                app.UseConsul();
-            }
-        }
+        });
+        app.UseAbpProConsul();
     }
 }
