@@ -15,7 +15,6 @@ global using Microsoft.Extensions.Caching.Distributed;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
-global using Microsoft.OpenApi.Models;
 global using Serilog;
 global using StackExchange.Redis;
 global using Swashbuckle.AspNetCore.SwaggerUI;
@@ -27,8 +26,7 @@ global using Volo.Abp.Autofac;
 global using Volo.Abp.Caching;
 global using Volo.Abp.Caching.StackExchangeRedis;
 global using Volo.Abp.EntityFrameworkCore;
-global using Volo.Abp.EntityFrameworkCore.MySQL;
 global using Volo.Abp.Localization;
 global using Volo.Abp.Modularity;
-global using Volo.Abp.Swashbuckle;
+
 global using Volo.Abp.VirtualFileSystem;

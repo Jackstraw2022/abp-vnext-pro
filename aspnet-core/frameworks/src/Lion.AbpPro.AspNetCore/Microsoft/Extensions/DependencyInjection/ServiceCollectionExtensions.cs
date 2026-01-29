@@ -2,8 +2,10 @@
 using Lion.AbpPro.AspNetCore;
 using Lion.AbpPro.AspNetCore.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Swagger;
 using Volo.Abp.AspNetCore.Auditing;
 using Volo.Abp.AspNetCore.MultiTenancy;
@@ -62,7 +64,7 @@ public static class ServiceCollectionExtensions
             // options.TenantResolvers.Add(new QueryStringTenantResolveContributor());
             // options.TenantResolvers.Add(new RouteTenantResolveContributor());
             options.TenantResolvers.Add(new HeaderTenantResolveContributor());
-            options.TenantResolvers.Add(new CookieTenantResolveContributor());
+            //options.TenantResolvers.Add(new CookieTenantResolveContributor());
         });
 
         return service;
@@ -128,7 +130,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAbpProAntiForgery(this IServiceCollection service)
     {
-        service.Configure<AbpAntiForgeryOptions>(options => { options.AutoValidate = false; });
+        var antiForgeryOptions = service.BuildServiceProvider().GetRequiredService<IOptions<AbpProAntiForgeryOptions>>().Value;
+        service.Configure<AbpAntiForgeryOptions>(options => { options.AutoValidate = antiForgeryOptions.Enabled; });
         return service;
     }
 
@@ -157,10 +160,10 @@ public static class ServiceCollectionExtensions
         service.AddSwaggerGen(options =>
         {
             // 文件下载类型
-            options.MapType<FileContentResult>(() => new OpenApiSchema() { Type = "file" });
+            //options.MapType<FileContentResult>(() => new OpenApiSchema() { Type = "file" });
             options.SwaggerDoc(name, new OpenApiInfo { Title = name, Version = version });
             options.DocInclusionPredicate((docName, description) => true);
-            options.EnableAnnotations(); // 启用注解
+            //options.EnableAnnotations(); // 启用注解
             options.DocumentFilter<HiddenAbpDefaultApiFilter>();
             options.SchemaFilter<EnumSchemaFilter>();
             // 加载所有xml注释，这里会导致swagger加载有点缓慢
@@ -180,21 +183,12 @@ public static class ServiceCollectionExtensions
                     Scheme = JwtBearerDefaults.AuthenticationScheme,
                     BearerFormat = "JWT"
                 });
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme, Id = "Bearer"
-                        }
-                    },
-                    new List<string>()
-                }
-            });
 
-            options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme()
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement()
+            {
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+            });
+            options.AddSecurityDefinition("Accept-Language", new OpenApiSecurityScheme()
             {
                 Type = SecuritySchemeType.ApiKey,
                 In = ParameterLocation.Header,
@@ -202,17 +196,11 @@ public static class ServiceCollectionExtensions
                 Description = "多语言设置，系统预设语言有zh-Hans、en，默认为zh-Hans",
             });
 
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement()
             {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                            { Type = ReferenceType.SecurityScheme, Id = "ApiKey" }
-                    },
-                    Array.Empty<string>()
-                }
+                [new OpenApiSecuritySchemeReference("Accept-Language", document)] = []
             });
+
         });
         return service;
     }
@@ -241,9 +229,10 @@ public static class ServiceCollectionExtensions
      /// <summary>
     /// 配置JWT
     /// </summary>
-    public static IServiceCollection AddAbpProAuthentication(this IServiceCollection service)
+    public static IServiceCollection AddAbpProJwtBearer(this IServiceCollection service)
     {
         var jwtOptions = service.BuildServiceProvider().GetRequiredService<IOptions<AbpProJwtOptions>>().Value;
+        var cookieOptions = service.BuildServiceProvider().GetRequiredService<IOptions<AbpProCookieOptions>>().Value;
         
         service.AddAuthentication(options =>
             {
@@ -295,7 +284,7 @@ public static class ServiceCollectionExtensions
 
                         if (accessToken.IsNullOrWhiteSpace())
                         {
-                            accessToken = currentContext.Request.Cookies[AbpProAspNetCoreConsts.DefaultCookieName];
+                            accessToken = currentContext.Request.Cookies[cookieOptions.Name];
                         }
 
                         currentContext.Token = accessToken;

@@ -3,43 +3,34 @@ namespace Lion.AbpPro;
 [DependsOn(
     typeof(AbpProHttpApiModule),
     typeof(AbpProAspNetCoreModule),
-    typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
     typeof(AbpProEntityFrameworkCoreModule),
-    typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpAccountWebModule),
     typeof(AbpProApplicationModule),
-    // typeof(AbpProCapModule),
-    // typeof(AbpProCapEntityFrameworkCoreModule),
-    typeof(AbpAspNetCoreMvcUiBasicThemeModule),
     typeof(AbpCachingStackExchangeRedisModule),
-    typeof(AbpDistributedLockingModule),
     typeof(AbpBlobStoringFileSystemModule),
-    typeof(AbpProStarterModule),
-    typeof(AbpSwashbuckleModule)
-    //typeof(AbpBackgroundJobsHangfireModule)
+    typeof(AbpProStarterModule)
 )]
 public partial class AbpProHttpApiHostModule : AbpModule
 {
+    
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         context.Services
             .AddAbpProAuditLog()
-            .AddAbpProAuthentication()
+            .AddAbpProJwtBearer()
             .AddAbpProMultiTenancy()
             .AddAbpProRedis()
-            .AddAbpProRedisDistributedLocking()
             .AddAbpProMiniProfiler()
             .AddAbpProCors()
             .AddAbpProAntiForgery()
             .AddAbpProIdentity()
-            .AddAbpProBlobStorage()
+            .AddAbpProBlobStorageFileSystem()
             .AddAbpProSignalR()
             .AddAbpProHealthChecks()
             .AddAbpProTenantResolvers()
             .AddAbpProLocalization()
             .AddAbpProExceptions()
-            .AddAbpProConsul()
             .AddAbpProSwagger("AbpPro");
     }
 
@@ -55,21 +46,13 @@ public partial class AbpProHttpApiHostModule : AbpModule
         app.UseAuthentication();
         app.UseAbpProMultiTenancy();
         app.UseAuthorization();
-        app.UseAbpProSwaggerUI("/swagger/AbpPro/swagger.json","AbpPro");
+        app.UseAbpProSwaggerUI("/swagger/AbpPro/swagger.json", "AbpPro");
         app.UseAbpProAuditing();
         app.UseAbpSerilogEnrichers();
         app.UseUnitOfWork();
         app.UseConfiguredEndpoints(endpoints =>
         {
-            endpoints.MapHealthChecks("/health"); 
-                
-            // endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions()
-            // {
-            //     Authorization = new[] { new CustomHangfireAuthorizeFilter() },
-            //     IgnoreAntiforgeryToken = true
-            // });
-
+            endpoints.MapHealthChecks("/health");
         });
-        app.UseAbpProConsul();
     }
 }

@@ -2,7 +2,7 @@
 
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>MyCompanyName.MyProjectName</RootNamespace>
         <PreserveCompilationReferences>true</PreserveCompilationReferences>
         <UserSecretsId>MyCompanyName.MyProjectName-4681b4fd-151f-4221-84a4-929d86723e4c</UserSecretsId>
@@ -10,33 +10,26 @@
 
     <ItemGroup>
         <PackageReference Include="Volo.Abp.Account.Web"/>
-        <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy"/>
         <PackageReference Include="Volo.Abp.Caching.StackExchangeRedis"/>
         <PackageReference Include="Volo.Abp.AspNetCore.Serilog"/>
-        <PackageReference Include="Volo.Abp.Swashbuckle"/>
-        <PackageReference Include="Volo.Abp.AspNetCore.Authentication.JwtBearer"/>
-        <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic"/>
         <PackageReference Include="Volo.Abp.DistributedLocking"/>
         <PackageReference Include="Volo.Abp.BlobStoring.FileSystem"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis"/>
-        <PackageReference Include="DotNetCore.CAP.MySql"/>
+        <PackageReference Include="DotNetCore.CAP.PostgreSql"/>
         <PackageReference Include="DotNetCore.CAP.RabbitMQ"/>
         <PackageReference Include="DotNetCore.CAP.Dashboard"/>
         <PackageReference Include="DistributedLock.Redis"/>
-        <PackageReference Include="Hangfire.Redis.StackExchange"/>
-        <PackageReference Include="Lion.AbpPro.AspNetCore"/>
+        <ProjectReference Include="..\..\..\..\..\aspnet-core\frameworks\src\Lion.AbpPro.AspNetCore\Lion.AbpPro.AspNetCore.csproj"/>
     </ItemGroup>
-    
-    
-    
+
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\MyCompanyName.MyProjectName.Application\MyCompanyName.MyProjectName.Application.csproj"/>
         <ProjectReference Include="..\..\src\MyCompanyName.MyProjectName.EntityFrameworkCore\MyCompanyName.MyProjectName.EntityFrameworkCore.csproj"/>
         <ProjectReference Include="..\..\src\MyCompanyName.MyProjectName.HttpApi\MyCompanyName.MyProjectName.HttpApi.csproj"/>
+
     </ItemGroup>
 
 

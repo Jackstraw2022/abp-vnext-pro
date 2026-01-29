@@ -2,23 +2,17 @@
 
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>Lion.AbpPro.LanguageManagement</RootNamespace>
         <PreserveCompilationReferences>true</PreserveCompilationReferences>
         <UserSecretsId>Lion.AbpPro.LanguageManagement-c2d31439-b723-48e2-b061-5ebd7aeb6010</UserSecretsId>
+        <NoWarnNuGet>NU1903;NU1902;$(NoWarnNuGet)</NoWarnNuGet>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Serilog.AspNetCore" />
-        <PackageReference Include="Serilog.Sinks.Async" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" />
-        <PackageReference Include="Volo.Abp.Autofac" />
         <PackageReference Include="Volo.Abp.Caching.StackExchangeRedis" />
-        <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy" />
-        <PackageReference Include="Volo.Abp.EntityFrameworkCore.MySQL" />
+        <PackageReference Include="Volo.Abp.EntityFrameworkCore.PostgreSql" />
         <PackageReference Include="Volo.Abp.AspNetCore.Serilog" />
-        <PackageReference Include="Volo.Abp.Swashbuckle" />
         <PackageReference Include="Volo.Abp.PermissionManagement.EntityFrameworkCore" />
         <PackageReference Include="Volo.Abp.SettingManagement.EntityFrameworkCore" />
         <PackageReference Include="Volo.Abp.AuditLogging.EntityFrameworkCore" />

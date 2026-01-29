@@ -6,12 +6,13 @@ namespace Lion.AbpPro.EntityFrameworkCore
     {
         public AbpProDbContext CreateDbContext(string[] args)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             AbpProEfCoreEntityExtensionMappings.Configure();
 
             var configuration = BuildConfiguration();
 
             var builder = new DbContextOptionsBuilder<AbpProDbContext>()
-                .UseMySQL(configuration.GetConnectionString("Default") ?? string.Empty);
+                .UseNpgsql(configuration.GetConnectionString("Default") ?? string.Empty);
 
             return new AbpProDbContext(builder.Options);
         }

@@ -1,3 +1,4 @@
+using Lion.AbpPro.Ddd.Application;
 using Lion.AbpPro.FileManagement;
 
 namespace Lion.AbpPro
@@ -11,13 +12,9 @@ namespace Lion.AbpPro
         typeof(LanguageManagementApplicationModule),
         typeof(NotificationManagementApplicationModule),
         typeof(FileManagementApplicationModule),
-        typeof(AbpProFreeSqlModule)
+        typeof(AbpProDddApplicationModule)
     )]
     public class AbpProApplicationModule : AbpModule
     {
-        public override void ConfigureServices(ServiceConfigurationContext context)
-        {
-            Configure<AbpAutoMapperOptions>(options => { options.AddMaps<AbpProApplicationModule>(); });
-        }
     }
 }

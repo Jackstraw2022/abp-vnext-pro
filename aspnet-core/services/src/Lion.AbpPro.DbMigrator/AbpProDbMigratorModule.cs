@@ -1,5 +1,4 @@
 using Volo.Abp.Localization;
-using Volo.Abp.Settings;
 
 namespace Lion.AbpPro.DbMigrator
 {

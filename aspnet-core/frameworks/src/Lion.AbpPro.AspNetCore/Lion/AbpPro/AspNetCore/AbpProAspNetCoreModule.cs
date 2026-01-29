@@ -1,7 +1,14 @@
 using Lion.AbpPro.AspNetCore.Options;
+using Volo.Abp.AspNetCore.MultiTenancy;
+using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic;
 
 namespace Lion.AbpPro.AspNetCore;
 
+[DependsOn(
+    typeof(AbpAspNetCoreMultiTenancyModule),
+    typeof(AbpAspNetCoreMvcUiBasicThemeModule)
+    )
+]
 public class AbpProAspNetCoreModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
@@ -13,5 +20,7 @@ public class AbpProAspNetCoreModule : AbpModule
         context.Services.Configure<AbpProSwaggerOptions>(context.Configuration.GetSection(AbpProAspNetCoreConsts.Swagger));
         context.Services.Configure<AbpProAuditOptions>(context.Configuration.GetSection(AbpProAspNetCoreConsts.Audit));
         context.Services.Configure<AbpProJwtOptions>(context.Configuration.GetSection(AbpProAspNetCoreConsts.Jwt));
+        context.Services.Configure<AbpProCookieOptions>(context.Configuration.GetSection(AbpProAspNetCoreConsts.Cookie));
+        context.Services.Configure<AbpProAntiForgeryOptions>(context.Configuration.GetSection(AbpProAspNetCoreConsts.AntiForgery));
     }
 }

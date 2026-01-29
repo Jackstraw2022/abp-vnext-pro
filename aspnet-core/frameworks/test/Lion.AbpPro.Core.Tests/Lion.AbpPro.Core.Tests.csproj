@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>false</IsPackable>
         <RootNamespace />
@@ -22,6 +22,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\Lion.AbpPro.Core\Lion.AbpPro.Core.csproj" />
+      <ProjectReference Include="..\..\src\Lion.AbpPro.IdGenerator\Lion.AbpPro.IdGenerator.csproj" />
     </ItemGroup>
 
 </Project>

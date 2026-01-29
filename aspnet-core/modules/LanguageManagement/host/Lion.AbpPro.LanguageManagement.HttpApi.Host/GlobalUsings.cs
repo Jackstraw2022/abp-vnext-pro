@@ -16,24 +16,22 @@ global using Microsoft.EntityFrameworkCore.Design;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
-global using Microsoft.OpenApi.Models;
 global using Serilog;
 global using Serilog.Events;
 global using StackExchange.Redis;
 global using Volo.Abp;
 global using Volo.Abp.AspNetCore.Mvc;
-global using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
-global using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
+
+
 global using Volo.Abp.AspNetCore.Serilog;
 global using Volo.Abp.AuditLogging.EntityFrameworkCore;
 global using Volo.Abp.Autofac;
 global using Volo.Abp.Caching;
 global using Volo.Abp.Caching.StackExchangeRedis;
 global using Volo.Abp.EntityFrameworkCore;
-global using Volo.Abp.EntityFrameworkCore.MySQL;
 global using Volo.Abp.Localization;
 global using Volo.Abp.Modularity;
 global using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 global using Volo.Abp.SettingManagement.EntityFrameworkCore;
-global using Volo.Abp.Swashbuckle;
+
 global using Volo.Abp.VirtualFileSystem;

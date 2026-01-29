@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace />
         <PackageId>Lion.AbpPro.AspNetCore</PackageId>
     </PropertyGroup>
@@ -12,10 +12,14 @@
         <PackageReference Include="Volo.Abp.AspNetCore" />
         <PackageReference Include="Volo.Abp.Autofac" />
         <PackageReference Include="Volo.Abp.Core" />
-        <PackageReference Include="Volo.Abp.Swashbuckle" />
+        <PackageReference Include="Swashbuckle.AspNetCore" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" />
         <PackageReference Include="Volo.Abp.AspNetCore.MultiTenancy" />
+        <PackageReference Include="Volo.Abp.AspNetCore.Mvc" />
         <PackageReference Include="Volo.Abp.Caching.StackExchangeRedis" />
-
+        <PackageReference Include="MiniProfiler.AspNetCore.Mvc" />
+        <PackageReference Include="MiniProfiler.EntityFrameworkCore" />
+        <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -36,13 +40,7 @@
         <PackageReference Include="Serilog.Sinks.Async" />
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" />
-        <PackageReference Include="Swashbuckle.AspNetCore" />
-        <PackageReference Include="MiniProfiler.AspNetCore.Mvc" />
-        <PackageReference Include="MiniProfiler.EntityFrameworkCore" />
-    </ItemGroup>
+  
     <ItemGroup>
         <Content Remove="$(UserProfile)\.nuget\packages\*\*\contentFiles\any\*\*.abppkg*.json" />
     </ItemGroup>
